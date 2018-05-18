@@ -86,8 +86,11 @@ public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchRe
             }
             return valid;
         };
-        Set<UserProfile> tos = getProfiles(message.getToGroups()), ccs = getProfiles(message.getCcGroups()), bccs =
-                getProfiles(message.getBccGroups());
+        Set<User> users = new HashSet<>();
+
+        Set<UserProfile> tos = getProfilesAllowed(users, message.getSender(), message.getToGroups());
+        Set<UserProfile> ccs = getProfilesAllowed(users, message.getSender(), message.getCcGroups());
+        Set<UserProfile> bccs = getProfilesAllowed(users, message.getSender(), message.getBccGroups());
         Collection<MimeMessageHandler> handlers;
         int valids;
 
@@ -157,8 +160,9 @@ public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchRe
         return emails;
     }
 
-    private static Set<UserProfile> getProfiles(Set<Group> groups) {
+    private static Set<UserProfile> getProfilesAllowed(Set<User> users, Sender sender, Set<Group> groups) {
         return groups.stream().flatMap(Group::getMembers)
+                .peek(users::add)
                 .filter(MessagingSystem.getInstance()::isOptedIn)
                 .map(User::getProfile).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
