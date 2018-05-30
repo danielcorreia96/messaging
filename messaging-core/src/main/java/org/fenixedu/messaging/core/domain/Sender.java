@@ -63,18 +63,20 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     }
 
     public static final class SenderBuilder {
-        private String address, name = null, replyTo = null;
+        private String address;
+        private String name;
+        private String replyTo;
         private boolean htmlEnabled;
         private Group members = Group.nobody();
         private MessageStoragePolicy policy = MessageStoragePolicy.keepAll();
         private Set<Group> recipients = new HashSet<>();
         private boolean attachmentsEnabled, optInRequired;
 
-        protected SenderBuilder(String address) {
+        protected SenderBuilder(final String address) {
             from(address);
         }
 
-        public SenderBuilder from(String address) {
+        public SenderBuilder from(final String address) {
             if (!isValidEmail(requireNonNull(address))) {
                 throw new IllegalArgumentException("Invalid sender address.");
             }
@@ -82,42 +84,42 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
             return this;
         }
 
-        public SenderBuilder as(String name) {
+        public SenderBuilder as(final String name) {
             this.name = requireNonNull(name);
             return this;
         }
 
-        public SenderBuilder replyTo(String replyTo) {
+        public SenderBuilder replyTo(final String replyTo) {
             this.replyTo = isValidEmail(replyTo) ? replyTo : null;
             return this;
         }
 
-        public SenderBuilder htmlEnabled(boolean htmlEnabled) {
+        public SenderBuilder htmlEnabled(final boolean htmlEnabled) {
             this.htmlEnabled = htmlEnabled;
             return this;
         }
 
-        public SenderBuilder members(Group members) {
+        public SenderBuilder members(final Group members) {
             this.members = requireNonNull(members);
             return this;
         }
 
-        public SenderBuilder storagePolicy(MessageStoragePolicy policy) {
+        public SenderBuilder storagePolicy(final MessageStoragePolicy policy) {
             this.policy = requireNonNull(policy);
             return this;
         }
 
-        public SenderBuilder keepMessages(int amount) {
+        public SenderBuilder keepMessages(final int amount) {
             this.policy = MessageStoragePolicy.keep(amount);
             return this;
         }
 
-        public SenderBuilder keepMessages(Period period) {
+        public SenderBuilder keepMessages(final Period period) {
             this.policy = MessageStoragePolicy.keep(period);
             return this;
         }
 
-        public SenderBuilder keepMessages(int amount, Period period) {
+        public SenderBuilder keepMessages(final int amount, final Period period) {
             this.policy = MessageStoragePolicy.keep(amount, period);
             return this;
         }
@@ -132,17 +134,17 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
             return this;
         }
 
-        public SenderBuilder recipients(Group... recipients) {
+        public SenderBuilder recipients(final Group... recipients) {
             builderSetAdd(requireNonNull(recipients), Objects::nonNull, this.recipients);
             return this;
         }
 
-        public SenderBuilder recipients(Collection<Group> recipients) {
+        public SenderBuilder recipients(final Collection<Group> recipients) {
             builderSetCopy(requireNonNull(recipients), Objects::nonNull, this.recipients);
             return this;
         }
 
-        public SenderBuilder recipients(Stream<Group> recipients) {
+        public SenderBuilder recipients(final Stream<Group> recipients) {
             builderSetAdd(requireNonNull(recipients), Objects::nonNull, this.recipients);
             return this;
         }
@@ -159,7 +161,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
 
         @Atomic(mode = TxMode.WRITE)
         public Sender build() {
-            Sender sender = new Sender();
+            final Sender sender = new Sender();
             sender.setAddress(address);
             sender.setName(Strings.nullToEmpty(name));
             sender.setReplyTo(replyTo);
@@ -173,7 +175,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         }
     }
 
-    public static SenderBuilder from(String address) {
+    public static SenderBuilder from(final String address) {
         return new SenderBuilder(address);
     }
 
@@ -184,7 +186,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     }
 
     @Override
-    public void setAddress(String address) {
+    public void setAddress(final String address) {
         if (!isValidEmail(requireNonNull(address))) {
             throw new IllegalArgumentException("Invalid sender address.");
         }
@@ -192,17 +194,17 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     }
 
     @Override
-    public void setName(String name) {
+    public void setName(final String name) {
         super.setName(requireNonNull(name));
     }
 
     @Override
-    public void setReplyTo(String replyTo) {
+    public void setReplyTo(final String replyTo) {
         super.setReplyTo(isValidEmail(replyTo) ? replyTo : null);
     }
 
     @Override
-    public void setPolicy(MessageStoragePolicy policy) {
+    public void setPolicy(final MessageStoragePolicy policy) {
         super.setPolicy(requireNonNull(policy));
     }
 
@@ -210,7 +212,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         return getMemberGroup().toGroup();
     }
 
-    public void setMembers(Group members) {
+    public void setMembers(final Group members) {
         super.setMemberGroup(members.toPersistentGroup());
     }
 
@@ -218,20 +220,20 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         return getRecipientSet().stream().map(PersistentGroup::toGroup).collect(Collectors.toSet());
     }
 
-    public void setRecipients(Collection<Group> recipients) {
+    public void setRecipients(final Collection<Group> recipients) {
         getRecipientSet().clear();
         recipients.stream().distinct().forEach(this::addRecipient);
     }
 
-    public void addRecipient(Group recipient) {
-        PersistentGroup group = recipient.toPersistentGroup();
+    public void addRecipient(final Group recipient) {
+        final PersistentGroup group = recipient.toPersistentGroup();
         if (!getRecipientSet().contains(group)) {
             super.addRecipient(group);
         }
     }
 
-    public void removeRecipient(Group recipient) {
-        PersistentGroup group = recipient.toPersistentGroup();
+    public void removeRecipient(final Group recipient) {
+        final PersistentGroup group = recipient.toPersistentGroup();
         if (getRecipientSet().contains(group)) {
             super.removeRecipient(group);
         }
@@ -243,7 +245,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     // FIXME remove when framework supports read-only relations
     public Set<User> getOptedInUsers() { return super.getOptedInUserSet(); }
 
-    public void addOptedInUser(User user) {
+    public void addOptedInUser(final User user) {
         if (!getOptedInUsers().contains(user)) {
             super.addOptedInUser(user);
             if (!getInvitedUsers().contains(user)){
@@ -252,7 +254,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         }
     }
 
-    public void removeOptedInUser(User user){
+    public void removeOptedInUser(final User user){
         if (getOptedInUsers().contains(user)){
             super.removeOptedInUser(user);
         }
@@ -285,7 +287,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         return available(Authenticate.getUser());
     }
 
-    public static Set<Sender> available(User user) {
+    public static Set<Sender> available(final User user) {
         return MessagingSystem.getInstance().getSenderSet().stream().filter(sender -> sender.getMembers().isMember(user))
                 .collect(Collectors.toSet());
     }
@@ -295,8 +297,8 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     }
 
     @Override
-    public int compareTo(Sender sender) {
-        int c = ptCollator.compare(getName(), sender.getName());
-        return c == 0 ? getExternalId().compareTo(sender.getExternalId()) : c;
+    public int compareTo(final Sender sender) {
+        final int comparison = ptCollator.compare(getName(), sender.getName());
+        return comparison == 0 ? getExternalId().compareTo(sender.getExternalId()) : comparison;
     }
 }

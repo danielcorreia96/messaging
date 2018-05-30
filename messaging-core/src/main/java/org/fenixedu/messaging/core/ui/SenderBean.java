@@ -28,8 +28,8 @@ public class SenderBean {
     private Collection<String> recipients, errors;
 
     public Collection<String> validate() {
-        Collection<String> errors = Lists.newArrayList();
-        String address = getAddress();
+        final Collection<String> errors = Lists.newArrayList();
+        final String address = getAddress();
         if (Strings.isNullOrEmpty(address)) {
             errors.add(BundleUtil.getString(BUNDLE, "error.sender.validation.address.empty"));
         }
@@ -66,9 +66,9 @@ public class SenderBean {
                 errors.add(BundleUtil.getString(BUNDLE, "error.sender.validation.members.invalid"));
             }
         }
-        Set<String> recipients = getRecipients();
+        final Set<String> recipients = getRecipients();
         if (recipients != null) {
-            for (String recipient : recipients) {
+            for (final String recipient : recipients) {
                 try {
                     Group.parse(recipient);
                 } catch (BennuCoreDomainException e) {
@@ -76,7 +76,7 @@ public class SenderBean {
                 }
             }
         }
-        String replyTo = getReplyTo();
+        final String replyTo = getReplyTo();
         if (!(Strings.isNullOrEmpty(replyTo) || MessagingSystem.Util.isValidEmail(replyTo))) {
             errors.add(BundleUtil.getString(BUNDLE, "error.sender.validation.replyTo.invalid", replyTo));
         }
@@ -120,15 +120,15 @@ public class SenderBean {
         return policy;
     }
 
-    public void setPolicy(String[] parts) {
+    public void setPolicy(final String... parts) {
         setPolicy(MessageStoragePolicy.internalize(parts));
     }
 
-    public void setPolicy(String policy) {
+    public void setPolicy(final String policy) {
         setPolicy(MessageStoragePolicy.internalize(policy));
     }
 
-    public void setPolicy(MessageStoragePolicy policy) {
+    public void setPolicy(final MessageStoragePolicy policy) {
         this.policy = policy.serialize();
         allPolicy = policy.isKeepAll();
         nonePolicy = policy.isKeepNone();
@@ -152,42 +152,42 @@ public class SenderBean {
 
     public Boolean getOptInRequired() { return optInRequired; }
 
-    public void setHtmlEnabled(boolean htmlEnabled) {
+    public void setHtmlEnabled(final boolean htmlEnabled) {
         this.htmlEnabled = htmlEnabled;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
-    public void setAddress(String address) {
+    public void setAddress(final String address) {
         this.address = address;
     }
 
-    public void setMembers(String members) {
+    public void setMembers(final String members) {
         this.members = members;
     }
 
-    public void setRecipients(Collection<String> recipients) {
+    public void setRecipients(final Collection<String> recipients) {
         this.recipients = recipients;
     }
 
-    public void setReplyTo(String replyTo) {
+    public void setReplyTo(final String replyTo) {
         this.replyTo = replyTo;
     }
 
-    protected void setErrors(Collection<String> errors) {
+    protected void setErrors(final Collection<String> errors) {
         this.errors = errors;
     }
 
     public void setAttachmentsEnabled(final Boolean attachmentsEnabled) { this.attachmentsEnabled = attachmentsEnabled; }
 
-    public void setOptInRequired(Boolean optInRequired) { this.optInRequired = optInRequired; }
+    public void setOptInRequired(final Boolean optInRequired) { this.optInRequired = optInRequired; }
 
-    Sender newSender() {
+    public Sender newSender() {
         Sender sender = null;
         if (validate().isEmpty()) {
-            Stream<Group> recipients = getRecipients().stream().map(Group::parse);
+            final Stream<Group> recipients = getRecipients().stream().map(Group::parse);
             sender = Sender.from(getAddress()).as(getName()).members(Group.parse(getMembers()))
                     .storagePolicy(MessageStoragePolicy.internalize(getPolicy())).htmlEnabled(getHtmlEnabled())
                     .replyTo(getReplyTo()).recipients(recipients)
@@ -197,7 +197,7 @@ public class SenderBean {
         return sender;
     }
 
-    protected void copy(Sender sender) {
+    protected void copy(final Sender sender) {
         if (sender != null) {
             setName(sender.getName());
             setAddress(sender.getAddress());
@@ -212,8 +212,8 @@ public class SenderBean {
     }
 
     @Atomic(mode = TxMode.WRITE)
-    protected Collection<String> configure(Sender sender) {
-        Collection<String> errors = validate();
+    protected Collection<String> configure(final Sender sender) {
+        final Collection<String> errors = validate();
         if (errors.isEmpty()) {
             sender.setName(getName());
             sender.setAddress(getAddress());

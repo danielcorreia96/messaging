@@ -32,10 +32,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 
 public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchReport_Base {
-    private static final Logger logger = LoggerFactory.getLogger(LocalEmailMessageDispatchReport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LocalEmailMessageDispatchReport.class);
     private static final boolean RECIPIENTS_AS_BCCS = EmailDispatchConfiguration.getConfiguration().recipientsAsBccs();
 
-    public LocalEmailMessageDispatchReport(Collection<MimeMessageHandler> handlers, Integer validCount, Integer invalidCount) {
+    public LocalEmailMessageDispatchReport(final Collection<MimeMessageHandler> handlers, final Integer validCount, final Integer invalidCount) {
         super();
         getHandlerSet().addAll(handlers);
         setTotalCount(validCount + invalidCount);
@@ -51,23 +51,24 @@ public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchRe
     }
 
     public void deliver() {
-        if (!isFinished()) {
-            for (MimeMessageHandler handler : getHandlerSet()) {
+        if (isFinished() && getQueue() != null) {
+            finishUpDelivery();
+        }
+        else {
+            for (final MimeMessageHandler handler : getHandlerSet()) {
                 try {
                     handler.deliver();
                 } catch (MessagingException e) {
-                    logger.error("Error sending message", e);
+                    LOGGER.error("Error sending message", e);
                 }
             }
             if (isFinished()) {
                 if (!super.isFinished()) {
-                    logger.error("Numbers are not right: total {} delivered {} invalid {} failed {}", getTotalCount(),
+                    LOGGER.error("Numbers are not right: total {} delivered {} invalid {} failed {}", getTotalCount(),
                             getDeliveredCount(), getInvalidCount(), getFailedCount());
                 }
                 finishUpDelivery();
             }
-        } else if (getQueue() != null) {
-            finishUpDelivery();
         }
     }
 
@@ -77,26 +78,26 @@ public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchRe
         setQueue(null);
     }
 
-    public static LocalEmailMessageDispatchReport dispatch(Message message) {
-        List<String> invalids = new ArrayList<>();
-        EmailBlacklist blacklist = EmailBlacklist.getInstance();
-        Predicate<String> validator = email -> {
-            boolean valid = MessagingSystem.Util.isValidEmail(email);
+    public static LocalEmailMessageDispatchReport dispatch(final Message message) {
+        final List<String> invalids = new ArrayList<>();
+        final EmailBlacklist blacklist = EmailBlacklist.getInstance();
+        final Predicate<String> validator = email -> {
+            final boolean valid = MessagingSystem.Util.isValidEmail(email);
             if (!valid) {
                 invalids.add(email);
             }
             return valid;
         };
 
-        Set<UserProfile> tos = getProfilesAllowed(message.getSender(), message.getToGroups());
-        Set<UserProfile> ccs = getProfilesAllowed(message.getSender(), message.getCcGroups());
-        Set<UserProfile> bccs = getProfilesAllowed(message.getSender(), message.getBccGroups());
-        Collection<MimeMessageHandler> handlers;
-        int valids;
+        final Set<UserProfile> tos = getProfilesAllowed(message.getSender(), message.getToGroups());
+        final Set<UserProfile> ccs = getProfilesAllowed(message.getSender(), message.getCcGroups());
+        final Set<UserProfile> bccs = getProfilesAllowed(message.getSender(), message.getBccGroups());
 
-        Map<Locale, Set<String>> tosByLocale, ccsByLocale, bccsByLocale;
-        Locale defLocale = message.getPreferredLocale();
-        Set<Locale> messageLocales = message.getContentLocales();
+        Map<Locale, Set<String>> tosByLocale;
+        Map<Locale, Set<String>> ccsByLocale;
+        Map<Locale, Set<String>> bccsByLocale;
+        final Locale defLocale = message.getPreferredLocale();
+        final Set<Locale> messageLocales = message.getContentLocales();
 
         if (RECIPIENTS_AS_BCCS) {
             bccs.addAll(tos);
@@ -106,12 +107,13 @@ public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchRe
             ccsByLocale = Maps.newHashMap();
             bccsByLocale = emailsByMessageLocale(bccs, validator, defLocale, messageLocales);
 
-            Set<String> singleTos = message.getSingleTosSet().stream().filter(validator).collect(Collectors.toSet());
-            bccsByLocale.computeIfAbsent(message.getPreferredLocale(), k -> new HashSet<>()).addAll(singleTos);
+            final Set<String> singleTos = message.getSingleTosSet().stream().filter(validator).collect(Collectors.toSet());
+            bccsByLocale.computeIfAbsent(message.getPreferredLocale(), locale -> new HashSet<>()).addAll(singleTos);
 
-            Set<String> singleBccs = message.getSingleBccsSet().stream().filter(validator).collect(Collectors.toSet());
-            bccsByLocale.computeIfAbsent(message.getPreferredLocale(), k -> new HashSet<>()).addAll(singleBccs);
-        } else {
+            final Set<String> singleBccs = message.getSingleBccsSet().stream().filter(validator).collect(Collectors.toSet());
+            bccsByLocale.computeIfAbsent(message.getPreferredLocale(), locale -> new HashSet<>()).addAll(singleBccs);
+        }
+        else {
             //XXX force disjoint recipient lists - priority order: tos > ccs > bccs > single bccs
             ccs.removeAll(tos);
             bccs.removeAll(tos);
@@ -132,35 +134,36 @@ public class LocalEmailMessageDispatchReport extends LocalEmailMessageDispatchRe
             bccsByLocale = emailsByMessageLocale(bccs, validator, defLocale, messageLocales);
 
             singleTos = singleTos.stream().filter(validator).collect(Collectors.toSet());
-            tosByLocale.computeIfAbsent(message.getPreferredLocale(), k -> new HashSet<>()).addAll(singleTos);
+            tosByLocale.computeIfAbsent(message.getPreferredLocale(), locale -> new HashSet<>()).addAll(singleTos);
 
             singleBccs = singleBccs.stream().filter(validator).collect(Collectors.toSet());
-            bccsByLocale.computeIfAbsent(message.getPreferredLocale(), k -> new HashSet<>()).addAll(singleBccs);
+            bccsByLocale.computeIfAbsent(message.getPreferredLocale(), locale -> new HashSet<>()).addAll(singleBccs);
         }
 
-        handlers = MimeMessageHandler.create(tosByLocale, ccsByLocale, bccsByLocale);
-        valids = Stream.of(tosByLocale, ccsByLocale, bccsByLocale).flatMap(m -> m.values().stream()).mapToInt(Collection::size)
-                .sum();
+        final Collection<MimeMessageHandler> handlers = MimeMessageHandler.create(tosByLocale, ccsByLocale, bccsByLocale);
+        final int valids =
+                Stream.of(tosByLocale, ccsByLocale, bccsByLocale).flatMap(addressesByLocale -> addressesByLocale.values().stream())
+                        .mapToInt(Collection::size).sum();
 
         invalids.forEach(blacklist::addInvalidAddress);
 
         return new LocalEmailMessageDispatchReport(handlers, valids, invalids.size());
     }
 
-    private static Map<Locale, Set<String>> emailsByMessageLocale(Set<UserProfile> users, Predicate<String> emailValidator,
-            Locale defLocale, Set<Locale> messageLocales) {
-        Map<Locale, Set<String>> emails = new HashMap<>();
-        users.stream().filter(p -> emailValidator.test(p.getEmail())).forEach(p -> {
-            Locale locale = p.getPreferredLocale();
+    private static Map<Locale, Set<String>> emailsByMessageLocale(final Set<UserProfile> users, final Predicate<String> emailValidator,
+            final Locale defLocale, final Set<Locale> messageLocales) {
+        final Map<Locale, Set<String>> emails = new HashMap<>();
+        users.stream().filter(userProfile -> emailValidator.test(userProfile.getEmail())).forEach(profile -> {
+            Locale locale = profile.getPreferredLocale();
             if (locale == null || !messageLocales.contains(locale)) {
                 locale = defLocale;
             }
-            emails.computeIfAbsent(locale, k -> new HashSet<>()).add(p.getEmail());
+            emails.computeIfAbsent(locale, localeKey -> new HashSet<>()).add(profile.getEmail());
         });
         return emails;
     }
 
-    private static Set<UserProfile> getProfilesAllowed(Sender sender, Set<Group> groups) {
+    private static Set<UserProfile> getProfilesAllowed(final Sender sender, final Set<Group> groups) {
         return groups.stream().flatMap(Group::getMembers)
                 .filter(MessagingSystem.getInstance()::isOptedIn)
                 .filter(user -> !sender.getOptInRequired() || sender.getOptedInUsers().contains(user))

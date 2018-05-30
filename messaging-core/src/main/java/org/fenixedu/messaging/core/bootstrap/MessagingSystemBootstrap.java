@@ -20,17 +20,23 @@ import com.google.common.collect.Lists;
 
 @Bootstrapper(bundle = "MessagingResources", name = "title.bootstrapper", sections = SystemSenderSection.class,
         after = AdminUserBootstrapper.class)
-public class MessagingSystemBootstrap {
+public final class MessagingSystemBootstrap {
 
     private static final String BUNDLE = "MessagingResources";
-    public static final String defaultSystemSenderAddress = "system@messaging.fenixedu.org",
-            defaultSystemSenderName = "System Sender",
-            defaultSystemSenderMembers = "#managers";
+    public static final String DEFAULT_SYSTEM_SENDER_ADDRESS = "system@messaging.fenixedu.org";
+    public static final String DEFAULT_SYSTEM_SENDER_NAME = "System Sender";
+    public static final String DEFAULT_SYSTEM_SENDER_MEMBERS = "#managers";
+
+    private MessagingSystemBootstrap(){
+        // Utility classes should have a private constructor to prevent instantiation.
+    }
 
     @Bootstrap
-    public static List<BootstrapError> bootstrapSystemSender(SystemSenderSection section) {
-        String name = section.getName(), address = section.getAddress(), expression = section.getGroupExpression();
-        List<BootstrapError> errors = Lists.newArrayList();
+    public static List<BootstrapError> bootstrapSystemSender(final SystemSenderSection section) {
+        final String name = section.getName();
+        final String address = section.getAddress();
+        final String expression = section.getGroupExpression();
+        final List<BootstrapError> errors = Lists.newArrayList();
         if (Strings.isNullOrEmpty(name)) {
             errors.add(new BootstrapError(SystemSenderSection.class, "getName", "error.bootstrapper.systemsender.name.empty",
                     BUNDLE));
@@ -57,7 +63,7 @@ public class MessagingSystemBootstrap {
                     "error.bootstrapper.systemsender.group.invalid", BUNDLE));
         }
         if (errors.isEmpty()) {
-            Sender sender = MessagingSystem.systemSender();
+            final Sender sender = MessagingSystem.systemSender();
             sender.setName(name);
             sender.setAddress(address);
             sender.setMembers(group);
@@ -68,15 +74,14 @@ public class MessagingSystemBootstrap {
     @Section(name = "title.bootstrapper.systemsender", description = "title.bootstrapper.systemsender.description",
             bundle = BUNDLE)
     public interface SystemSenderSection {
-        @Field(name = "label.bootstrapper.systemsender.name", defaultValue = defaultSystemSenderName, order = 1)
+        @Field(name = "label.bootstrapper.systemsender.name", defaultValue = DEFAULT_SYSTEM_SENDER_NAME, order = 1)
         String getName();
 
-        @Field(name = "label.bootstrapper.systemsender.address", defaultValue = defaultSystemSenderAddress,
+        @Field(name = "label.bootstrapper.systemsender.address", defaultValue = DEFAULT_SYSTEM_SENDER_ADDRESS,
                 fieldType = FieldType.EMAIL, order = 2)
         String getAddress();
 
-        @Field(name = "label.bootstrapper.systemsender.group", hint = "hint.bootstrapper.systemsender.group", defaultValue =
-                defaultSystemSenderMembers,
+        @Field(name = "label.bootstrapper.systemsender.group", hint = "hint.bootstrapper.systemsender.group", defaultValue = DEFAULT_SYSTEM_SENDER_MEMBERS,
                 order = 3)
         String getGroupExpression();
     }

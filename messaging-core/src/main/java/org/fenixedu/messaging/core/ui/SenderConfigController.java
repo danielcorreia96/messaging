@@ -8,7 +8,6 @@ import org.fenixedu.bennu.spring.portal.SpringFunctionality;
 import org.fenixedu.messaging.core.domain.MessagingSystem;
 import org.fenixedu.messaging.core.domain.Sender;
 import org.fenixedu.messaging.core.exception.MessagingDomainException;
-import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,37 +31,38 @@ public class SenderConfigController {
     }
 
     @RequestMapping(value = { "/senders", "/senders/" })
-    public String listSenders(Model model, @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "items", defaultValue = "10") int items,
-            @RequestParam(value = "search", defaultValue = "") String search) {
-        model.addAttribute("configure", true);
-        Sender systemSender = MessagingSystem.systemSender();
-        model.addAttribute("sender", systemSender);
-        model.addAttribute("system", true);
-        Set<Sender> senderSet = Sender.all().stream()
-                .filter(s -> s.getName().toLowerCase().contains(search.toLowerCase()))
+    public String listSenders(final Model model, @RequestParam(value = "page", defaultValue = "1") final int page,
+            @RequestParam(value = "items", defaultValue = "10") final int items,
+            @RequestParam(value = "search", defaultValue = "") final String search) {
+        final Sender systemSender = MessagingSystem.systemSender();
+        final Set<Sender> senderSet = Sender.all().stream()
+                .filter(sender -> sender.getName().toLowerCase().contains(search.toLowerCase()))
                 .collect(Collectors.toSet());
         senderSet.remove(systemSender);
+
         PaginationUtils.paginate(model, "messaging/config/senders", "senders", senderSet, items, page);
+        model.addAttribute("configure", true);
+        model.addAttribute("sender", systemSender);
+        model.addAttribute("system", true);
         model.addAttribute("search", search);
         return "messaging/listSenders";
     }
 
     @RequestMapping("/senders/{sender}")
-    public ModelAndView viewSender(@PathVariable Sender sender) throws Exception {
+    public ModelAndView viewSender(@PathVariable final Sender sender) {
         return new ModelAndView("messaging/viewSender",
                 ImmutableMap.of("configure", true, "sender", sender, "system", sender.equals(MessagingSystem.systemSender())));
     }
 
     @RequestMapping("/senders/new")
-    public ModelAndView newSender(Model model) throws Exception {
+    public ModelAndView newSender(final Model model) {
         model.addAttribute("create", true);
         return editSender(null, new SenderBean());
     }
 
     @RequestMapping(value = "/senders/new", method = RequestMethod.POST)
-    public ModelAndView createSender(@ModelAttribute("senderBean") SenderBean bean) throws Exception {
-        Sender sender = bean.newSender();
+    public ModelAndView createSender(@ModelAttribute("senderBean") final SenderBean bean) {
+        final Sender sender = bean.newSender();
         if (sender != null) {
             return viewSender(sender);
         }
@@ -71,14 +71,14 @@ public class SenderConfigController {
     }
 
     @RequestMapping("/senders/{sender}/edit")
-    public ModelAndView editSender(@PathVariable Sender sender, @ModelAttribute("senderBean") SenderBean bean) throws Exception {
+    public ModelAndView editSender(@PathVariable final Sender sender, @ModelAttribute("senderBean") final SenderBean bean) {
         bean.copy(sender);
         return new ModelAndView("messaging/editSender", "senderBean", bean);
     }
 
     @RequestMapping(value = "/senders/{sender}/edit", method = RequestMethod.POST)
-    public ModelAndView saveSender(@PathVariable Sender sender, @ModelAttribute("senderBean") SenderBean bean) throws Exception {
-        Collection<String> errors = bean.configure(sender);
+    public ModelAndView saveSender(@PathVariable final Sender sender, @ModelAttribute("senderBean") final SenderBean bean) {
+        final Collection<String> errors = bean.configure(sender);
         if (errors.isEmpty()) {
             return viewSender(sender);
         }
@@ -86,7 +86,7 @@ public class SenderConfigController {
     }
 
     @RequestMapping("/senders/{sender}/delete")
-    public String deleteSender(Model model, @PathVariable Sender sender) throws Exception {
+    public String deleteSender(@PathVariable final Sender sender) {
         if (MessagingSystem.systemSender().equals(sender)) {
             throw MessagingDomainException.forbidden();
         }

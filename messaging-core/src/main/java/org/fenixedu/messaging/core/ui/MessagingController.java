@@ -80,7 +80,7 @@ public class MessagingController {
     public String listSenders(final Model model, @RequestParam(value = "page", defaultValue = "1") final int page,
             @RequestParam(value = "items", defaultValue = "10") final int items,
             @RequestParam(value = "search", defaultValue = "") final String search) {
-        Set<Sender> senders = Sender.available().stream()
+        final Set<Sender> senders = Sender.available().stream()
                 .filter(sender -> sender.getName().toLowerCase().contains(search.toLowerCase()))
                 .collect(Collectors.toSet());
         PaginationUtils.paginate(model, "messaging/senders", "senders", senders, items, page);
@@ -106,12 +106,12 @@ public class MessagingController {
             throw MessagingDomainException.forbidden();
         }
 
-        JsonObject info = new JsonObject();
-        JsonArray array = new JsonArray();
+        final JsonObject info = new JsonObject();
+        final JsonArray array = new JsonArray();
         sender.getRecipients().stream().map(recipient -> MessageBean.buildRecipientJson(sender, recipient))
                 .forEach(array::add);
         info.add("recipients", array);
-        String replyTo = sender.getReplyTo();
+        final String replyTo = sender.getReplyTo();
         if (!Strings.isNullOrEmpty(replyTo)) {
             info.add("replyTo", new JsonPrimitive(replyTo));
         }
@@ -121,12 +121,12 @@ public class MessagingController {
     }
 
     @RequestMapping(value = "/message", method = RequestMethod.GET)
-    public String newMessage(final Model model, @ModelAttribute("messageBean") MessageBean messageBean, final HttpServletRequest request) {
+    public String newMessage(final Model model, @ModelAttribute("messageBean") final MessageBean messageBean, final HttpServletRequest request) {
 
-        messageBean = MessagingUtils.getMessageBeanFromSession(request).orElse(messageBean);
+        final MessageBean newMessageBean = MessagingUtils.getMessageBeanFromSession(request).orElse(messageBean);
         MessagingUtils.clearMessageBeanFromSession(request);
 
-        final Sender sender = Optional.ofNullable(messageBean.getSender())
+        final Sender sender = Optional.ofNullable(newMessageBean.getSender())
                 .orElse(Sender.available().stream().findAny().orElseThrow(MessagingDomainException::forbidden));
 
         if (!allowedSender(sender)){
@@ -136,13 +136,13 @@ public class MessagingController {
         final Set<JsonObject> collect =
                 sender.getRecipients().stream().map(recipient -> MessageBean.buildRecipientJson(sender, recipient))
                         .collect(Collectors.toSet());
-        messageBean.setRecipients(collect);
-        model.addAttribute("messageBean", messageBean);
+        newMessageBean.setRecipients(collect);
+        model.addAttribute("messageBean", newMessageBean);
         return "/messaging/newMessage";
     }
 
     @RequestMapping(value = "/message", method = RequestMethod.POST)
-    public ModelAndView sendMessage(final Model model, @ModelAttribute("messageBean") MessageBean messageBean,
+    public ModelAndView sendMessage(final Model model, @ModelAttribute("messageBean") final MessageBean messageBean,
             final RedirectAttributes redirectAttributes, final HttpServletRequest request) {
         if (messageBean != null) {
             if (allowedSender(messageBean.getSender())) {
@@ -166,7 +166,7 @@ public class MessagingController {
         model.addAttribute("locales", getSupportedLocales(message));
         model.addAttribute("message", message);
         final Map<String, String> messageFiles = new HashMap<>();
-        for (GenericFile genericFile : message.getFileSet()) {
+        for (final GenericFile genericFile : message.getFileSet()) {
             messageFiles.put(genericFile.getFilename(), FileDownloadServlet.getDownloadUrl(genericFile));
         }
         model.addAttribute("files", messageFiles);

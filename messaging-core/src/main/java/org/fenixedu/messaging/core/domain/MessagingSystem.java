@@ -24,9 +24,9 @@
  */
 package org.fenixedu.messaging.core.domain;
 
-import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.defaultSystemSenderAddress;
-import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.defaultSystemSenderMembers;
-import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.defaultSystemSenderName;
+import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.DEFAULT_SYSTEM_SENDER_ADDRESS;
+import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.DEFAULT_SYSTEM_SENDER_MEMBERS;
+import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.DEFAULT_SYSTEM_SENDER_NAME;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,8 +57,8 @@ import pt.ist.fenixframework.Atomic.TxMode;
  * @author Luis Cruz
  */
 public class MessagingSystem extends MessagingSystem_Base {
-    private static MessagingSystem instance = null;
-    private static MessageDispatcher dispatcher = null;
+    private static MessagingSystem instance;
+    private static MessageDispatcher dispatcher;
 
     private MessagingSystem() {
         super();
@@ -70,8 +70,8 @@ public class MessagingSystem extends MessagingSystem_Base {
         instance = Bennu.getInstance().getMessagingSystem();
         if (instance == null) {
             instance = new MessagingSystem();
-            Sender sender = Sender.from(defaultSystemSenderAddress).as(defaultSystemSenderName)
-                    .members(Group.parse(defaultSystemSenderMembers)).recipients(Group.anyone()).build();
+            final Sender sender = Sender.from(DEFAULT_SYSTEM_SENDER_ADDRESS).as(DEFAULT_SYSTEM_SENDER_NAME)
+                    .members(Group.parse(DEFAULT_SYSTEM_SENDER_MEMBERS)).recipients(Group.anyone()).build();
             instance.setSystemSender(sender);
         }
 
@@ -86,7 +86,7 @@ public class MessagingSystem extends MessagingSystem_Base {
     }
 
     @Atomic(mode = TxMode.WRITE)
-    public static MessageDispatchReport dispatch(Message message) {
+    public static MessageDispatchReport dispatch(final Message message) {
         MessageDispatchReport report = null;
         if (dispatcher != null) {
             report = dispatcher.dispatch(message);
@@ -98,11 +98,11 @@ public class MessagingSystem extends MessagingSystem_Base {
         return report;
     }
 
-    public static MessageDispatcher getMessageDispatcher(MessageDispatcher dispatcher) {
+    public static MessageDispatcher getMessageDispatcher(final MessageDispatcher dispatcher) {
         return MessagingSystem.dispatcher;
     }
 
-    public static void setMessageDispatcher(MessageDispatcher dispatcher) {
+    public static void setMessageDispatcher(final MessageDispatcher dispatcher) {
         MessagingSystem.dispatcher = dispatcher;
     }
 
@@ -115,19 +115,19 @@ public class MessagingSystem extends MessagingSystem_Base {
         return getInstance().getSystemSender();
     }
 
-    public boolean isOptOutAvailable(User user){
+    public boolean isOptOutAvailable(final User user){
         return getOptOutAvailable().isMember(user);
     }
 
-    public boolean isOptedOut(User user){
+    public boolean isOptedOut(final User user){
         return getOptedOutGroup().isMember(user);
     }
 
-    public boolean isOptedIn(User user){
+    public boolean isOptedIn(final User user){
         return !isOptedOut(user);
     }
 
-    private Group getOptSomethingGroup(PersistentGroup persistentGroup) {
+    private Group getOptSomethingGroup(final PersistentGroup persistentGroup) {
         if (persistentGroup == null){
             return Group.nobody();
         }
@@ -142,21 +142,21 @@ public class MessagingSystem extends MessagingSystem_Base {
         return getOptSomethingGroup(getPersistentOptOutAvailableGroup());
     }
 
-    public void setOptOutAvailable(Group group){
+    public void setOptOutAvailable(final Group group){
         setPersistentOptOutAvailableGroup(group == null ? null : group.toPersistentGroup());
     }
 
-    public void setOptedOutGroup(Group group){
+    public void setOptedOutGroup(final Group group){
         setPersistentOptedOutGroup(group == null ? null : group.toPersistentGroup());
     }
 
-    public void optOut(User user){
+    public void optOut(final User user){
         if (user != null){
             setOptedOutGroup(getOptedOutGroup().grant(user));
         }
     }
 
-    public void optIn(User user){
+    public void optIn(final User user){
         if (user != null){
             setOptedOutGroup(getOptedOutGroup().revoke(user));
         }
@@ -166,6 +166,10 @@ public class MessagingSystem extends MessagingSystem_Base {
 
         private static final String MAIL_LIST_SEPARATOR = "\\s*,\\s*";
         private static final Joiner MAIL_LIST_JOINER = Joiner.on(",").skipNulls();
+
+        private Util(){
+            // Utility classes should have a private constructor to prevent instantiation.
+        }
 
         public static boolean isValidEmail(final String email) {
             if (email == null) {
@@ -179,30 +183,31 @@ public class MessagingSystem extends MessagingSystem_Base {
             }
         }
 
-        public static Set<String> toEmailSet(Collection<PersistentGroup> groups) {
-            return groups.stream().flatMap(g -> g.getMembers()).map(User::getProfile).filter(Objects::nonNull)
-                    .map(UserProfile::getEmail).filter(e -> !Strings.isNullOrEmpty(e)).collect(Collectors.toSet());
+        public static Set<String> toEmailSet(final Collection<PersistentGroup> groups) {
+            return groups.stream().flatMap(PersistentGroup::getMembers).map(User::getProfile)
+                    .filter(Objects::nonNull).map(UserProfile::getEmail)
+                    .filter(email -> !Strings.isNullOrEmpty(email)).collect(Collectors.toSet());
         }
 
-        public static Set<String> toEmailSet(String emails) {
+        public static Set<String> toEmailSet(final String emails) {
             return Strings.isNullOrEmpty(emails) ? Sets.newHashSet() : Stream.of(emails.split(MAIL_LIST_SEPARATOR))
-                    .filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+                    .filter(email -> !email.isEmpty()).collect(Collectors.toSet());
         }
 
-        public static String toEmailListString(Collection<String> emails) {
+        public static String toEmailListString(final Collection<String> emails) {
             return emails == null ? "" : MAIL_LIST_JOINER
-                    .join(emails.stream().filter(e -> !Strings.isNullOrEmpty(e)).collect(Collectors.toSet()));
+                    .join(emails.stream().filter(email -> !Strings.isNullOrEmpty(email)).collect(Collectors.toSet()));
         }
 
-        protected static <T> void builderSetAdd(Stream<T> stream, Predicate<T> filter, Set<T> set) {
+        public static <T> void builderSetAdd(final Stream<T> stream, final Predicate<T> filter, final Set<T> set) {
             stream.filter(filter).forEach(set::add);
         }
 
-        protected static <T> void builderSetAdd(T[] array, Predicate<T> filter, Set<T> set) {
+        public static <T> void builderSetAdd(final T[] array, final Predicate<T> filter, final Set<T> set) {
             builderSetAdd(Arrays.stream(array), filter, set);
         }
 
-        protected static <T> void builderSetCopy(Collection<T> collection, Predicate<T> filter, Set<T> set) {
+        public static <T> void builderSetCopy(final Collection<T> collection, final Predicate<T> filter, final Set<T> set) {
             set.clear();
             builderSetAdd(collection.stream(), filter, set);
         }

@@ -36,7 +36,7 @@ ${portal.toolkit()}
 	<div class="alert alert-danger">
 		<span><spring:message code="error.message.not.sent"/></span>
 		<c:forEach items="${sort:uniqueSort(messageBean.errors)}" var="error">
-			<br/><span style="padding-left: 2em;">${error}</span>
+			<br/><span style="padding-left: 2em;"><c:out value="${error}"/></span>
 		</c:forEach>
 	</div>
 </c:if>

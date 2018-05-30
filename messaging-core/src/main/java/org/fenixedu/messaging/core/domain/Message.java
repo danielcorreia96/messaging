@@ -65,11 +65,11 @@ public final class Message extends Message_Base implements Comparable<Message> {
 
     public static final class TemplateMessageBuilder {
 
-        private MessageBuilder messageBuilder;
-        private MessageTemplate template;
+        private final MessageBuilder messageBuilder;
+        private final MessageTemplate template;
         private final Map<String, Object> params = new HashMap<>();
 
-        protected TemplateMessageBuilder(String key, MessageBuilder messageBuilder) {
+        protected TemplateMessageBuilder(final String key, final MessageBuilder messageBuilder) {
             this.template = MessageTemplate.get(key);
             if (this.template == null) {
                 throw new IllegalArgumentException("Unknown template key.");
@@ -77,14 +77,14 @@ public final class Message extends Message_Base implements Comparable<Message> {
             this.messageBuilder = requireNonNull(messageBuilder);
         }
 
-        public TemplateMessageBuilder parameter(String s, Object e) {
-            this.params.put(requireNonNull(s), e);
+        public TemplateMessageBuilder parameter(final String paramKey, final Object paramValue) {
+            this.params.put(requireNonNull(paramKey), paramValue);
             return this;
         }
 
-        public TemplateMessageBuilder parameters(Map<String, Object> params) {
-            params.entrySet().stream().filter(e -> e.getKey() != null && e.getValue() != null)
-                    .forEach(e -> this.params.put(e.getKey(), e.getValue()));
+        public TemplateMessageBuilder parameters(final Map<String, Object> params) {
+            params.entrySet().stream().filter(entry -> entry.getKey() != null && entry.getValue() != null)
+                    .forEach(entry -> this.params.put(entry.getKey(), entry.getValue()));
             return this;
         }
 
@@ -113,23 +113,26 @@ public final class Message extends Message_Base implements Comparable<Message> {
             @TemplateParameter(id = "singleTos", description = "message.template.message.wrapper.parameter.singleTos") },
             bundle = "MessagingResources")
     public static final class MessageBuilder implements Serializable {
-        private boolean wrapped = false;
         private static final long serialVersionUID = 525424959825814582L;
+        private boolean wrapped;
         private Sender sender;
-        private LocalizedString subject = new LocalizedString(), textBody = new LocalizedString(), htmlBody =
-                new LocalizedString();
-        private Set<String> replyTo = new HashSet<>();
+        private LocalizedString subject = new LocalizedString();
+        private LocalizedString textBody = new LocalizedString();
+        private LocalizedString htmlBody = new LocalizedString();
+        private final Set<String> replyTo = new HashSet<>();
         private Locale preferredLocale = I18N.getLocale();
-        private Set<Group> tos = new HashSet<>(), ccs = new HashSet<>(), bccs = new HashSet<>();
-        private Set<String> singleBccs = new HashSet<>();
-        private Set<GenericFile> files = new HashSet<>();
-        private Set<String> singleTos = new HashSet<>();
+        private final Set<Group> tos = new HashSet<>();
+        private final Set<Group> ccs = new HashSet<>();
+        private final Set<Group> bccs = new HashSet<>();
+        private final Set<String> singleBccs = new HashSet<>();
+        private final Set<GenericFile> files = new HashSet<>();
+        private final Set<String> singleTos = new HashSet<>();
 
-        protected MessageBuilder(Sender sender) {
+        protected MessageBuilder(final Sender sender) {
             from(sender);
         }
 
-        public MessageBuilder from(Sender sender) {
+        public MessageBuilder from(final Sender sender) {
             this.sender = requireNonNull(sender);
             return this;
         }
@@ -144,185 +147,185 @@ public final class Message extends Message_Base implements Comparable<Message> {
             return this;
         }
 
-        public MessageBuilder subject(LocalizedString subject) {
+        public MessageBuilder subject(final LocalizedString subject) {
             this.subject = requireNonNull(subject);
             return this;
         }
 
-        public MessageBuilder subject(String subject, Locale locale) {
+        public MessageBuilder subject(final String subject, final Locale locale) {
             requireNonNull(locale);
             this.subject = Strings.isNullOrEmpty(subject) ? this.subject.without(locale) : this.subject.with(locale, subject);
             return this;
         }
 
-        public MessageBuilder subject(String subject) {
+        public MessageBuilder subject(final String subject) {
             return subject(subject, I18N.getLocale());
         }
 
-        public MessageBuilder textBody(LocalizedString textBody) {
+        public MessageBuilder textBody(final LocalizedString textBody) {
             this.textBody = requireNonNull(textBody);
             return this;
         }
 
-        public MessageBuilder textBody(String textBody, Locale locale) {
+        public MessageBuilder textBody(final String textBody, final Locale locale) {
             requireNonNull(locale);
             this.textBody =
                     Strings.isNullOrEmpty(textBody) ? this.textBody.without(locale) : this.textBody.with(locale, textBody);
             return this;
         }
 
-        public MessageBuilder textBody(String textBody) {
+        public MessageBuilder textBody(final String textBody) {
             return textBody(textBody, I18N.getLocale());
         }
 
-        public MessageBuilder htmlBody(LocalizedString htmlBody) {
+        public MessageBuilder htmlBody(final LocalizedString htmlBody) {
             this.htmlBody = requireNonNull(htmlBody);
             return this;
         }
 
-        public MessageBuilder htmlBody(String htmlBody, Locale locale) {
+        public MessageBuilder htmlBody(final String htmlBody, final Locale locale) {
             requireNonNull(locale);
             this.htmlBody =
                     Strings.isNullOrEmpty(htmlBody) ? this.htmlBody.without(locale) : this.htmlBody.with(locale, htmlBody);
             return this;
         }
 
-        public MessageBuilder htmlBody(String htmlBody) {
+        public MessageBuilder htmlBody(final String htmlBody) {
             return htmlBody(htmlBody, I18N.getLocale());
         }
 
-        public TemplateMessageBuilder template(String key) {
+        public TemplateMessageBuilder template(final String key) {
             return new TemplateMessageBuilder(requireNonNull(key), this);
         }
 
-        public MessageBuilder template(String key, Map<String, Object> parameters) {
+        public MessageBuilder template(final String key, final Map<String, Object> parameters) {
             return new TemplateMessageBuilder(requireNonNull(key), this).parameters(requireNonNull(parameters)).and();
         }
 
-        public MessageBuilder preferredLocale(Locale preferredLocale) {
+        public MessageBuilder preferredLocale(final Locale preferredLocale) {
             this.preferredLocale = requireNonNull(preferredLocale);
             return this;
         }
 
-        public MessageBuilder content(String subject, String textBody, String htmlBody, Locale locale) {
+        public MessageBuilder content(final String subject, final String textBody, final String htmlBody, final Locale locale) {
             subject(subject, locale);
             textBody(textBody, locale);
             htmlBody(htmlBody, locale);
             return this;
         }
 
-        public MessageBuilder content(String subject, String textBody, String htmlBody) {
+        public MessageBuilder content(final String subject, final String textBody, final String htmlBody) {
             return content(subject, textBody, htmlBody, I18N.getLocale());
         }
 
-        public MessageBuilder content(LocalizedString subject, LocalizedString textBody, LocalizedString htmlBody) {
+        public MessageBuilder content(final LocalizedString subject, final LocalizedString textBody, final LocalizedString htmlBody) {
             subject(subject);
             textBody(textBody);
             htmlBody(htmlBody);
             return this;
         }
 
-        public MessageBuilder to(Collection<Group> tos) {
+        public MessageBuilder to(final Collection<Group> tos) {
             builderSetCopy(requireNonNull(tos), Objects::nonNull, this.tos);
             return this;
         }
 
-        public MessageBuilder to(Stream<Group> tos) {
+        public MessageBuilder to(final Stream<Group> tos) {
             builderSetAdd(requireNonNull(tos), Objects::nonNull, this.tos);
             return this;
         }
 
-        public MessageBuilder to(Group... tos) {
+        public MessageBuilder to(final Group... tos) {
             builderSetAdd(requireNonNull(tos), Objects::nonNull, this.tos);
             return this;
         }
 
-        public MessageBuilder cc(Collection<Group> ccs) {
+        public MessageBuilder cc(final Collection<Group> ccs) {
             builderSetCopy(requireNonNull(ccs), Objects::nonNull, this.ccs);
             return this;
         }
 
-        public MessageBuilder cc(Stream<Group> ccs) {
+        public MessageBuilder cc(final Stream<Group> ccs) {
             builderSetAdd(requireNonNull(ccs), Objects::nonNull, this.ccs);
             return this;
         }
 
-        public MessageBuilder cc(Group... ccs) {
+        public MessageBuilder cc(final Group... ccs) {
             builderSetAdd(requireNonNull(ccs), Objects::nonNull, this.ccs);
             return this;
         }
 
-        public MessageBuilder bcc(Collection<Group> bccs) {
+        public MessageBuilder bcc(final Collection<Group> bccs) {
             builderSetCopy(requireNonNull(bccs), Objects::nonNull, this.bccs);
             return this;
         }
 
-        public MessageBuilder bcc(Stream<Group> bccs) {
+        public MessageBuilder bcc(final Stream<Group> bccs) {
             builderSetAdd(requireNonNull(bccs), Objects::nonNull, this.bccs);
             return this;
         }
 
-        public MessageBuilder bcc(Group... bccs) {
+        public MessageBuilder bcc(final Group... bccs) {
             builderSetAdd(requireNonNull(bccs), Objects::nonNull, this.bccs);
             return this;
         }
 
-        public MessageBuilder singleBcc(Collection<String> bccs) {
+        public MessageBuilder singleBcc(final Collection<String> bccs) {
             builderSetCopy(requireNonNull(bccs), Util::isValidEmail, this.singleBccs);
             return this;
         }
 
-        public MessageBuilder singleBcc(Stream<String> bccs) {
+        public MessageBuilder singleBcc(final Stream<String> bccs) {
             builderSetAdd(requireNonNull(bccs), Util::isValidEmail, this.singleBccs);
             return this;
         }
 
-        public MessageBuilder singleBcc(String... bccs) {
+        public MessageBuilder singleBcc(final String... bccs) {
             builderSetAdd(requireNonNull(bccs), Util::isValidEmail, this.singleBccs);
             return this;
         }
 
-        public MessageBuilder singleTos(Collection<String> tos) {
+        public MessageBuilder singleTos(final Collection<String> tos) {
             builderSetCopy(requireNonNull(tos), Util::isValidEmail, this.singleTos);
             return this;
         }
 
-        public MessageBuilder singleTos(Stream<String> tos) {
+        public MessageBuilder singleTos(final Stream<String> tos) {
             builderSetAdd(requireNonNull(tos), Util::isValidEmail, this.singleTos);
             return this;
         }
 
-        public MessageBuilder singleTos(String... tos) {
+        public MessageBuilder singleTos(final String... tos) {
             builderSetAdd(requireNonNull(tos), Util::isValidEmail, this.singleTos);
             return this;
         }
 
-        public MessageBuilder replyTo(Collection<String> replyTos) {
+        public MessageBuilder replyTo(final Collection<String> replyTos) {
             builderSetCopy(requireNonNull(replyTos), Util::isValidEmail, this.replyTo);
             return this;
         }
 
-        public MessageBuilder replyTo(Stream<String> replyTos) {
+        public MessageBuilder replyTo(final Stream<String> replyTos) {
             builderSetAdd(requireNonNull(replyTos), Util::isValidEmail, this.replyTo);
             return this;
         }
 
-        public MessageBuilder replyTo(String... replyTos) {
+        public MessageBuilder replyTo(final String... replyTos) {
             builderSetAdd(requireNonNull(replyTos), Util::isValidEmail, this.replyTo);
             return this;
         }
 
-        public MessageBuilder attachment(Collection<GenericFile> files) {
+        public MessageBuilder attachment(final Collection<GenericFile> files) {
             builderSetCopy(requireNonNull(files), Objects::nonNull, this.files);
             return this;
         }
 
-        public MessageBuilder attachment(Stream<GenericFile> files) {
+        public MessageBuilder attachment(final Stream<GenericFile> files) {
             builderSetAdd(requireNonNull(files), Objects::nonNull, this.files);
             return this;
         }
 
-        public MessageBuilder attachment(GenericFile... files) {
+        public MessageBuilder attachment(final GenericFile... files) {
             builderSetAdd(requireNonNull(files), Objects::nonNull, this.files);
             return this;
         }
@@ -334,7 +337,7 @@ public final class Message extends Message_Base implements Comparable<Message> {
 
         @Atomic(mode = TxMode.WRITE)
         public Message send() {
-            Message message = new Message();
+            final Message message = new Message();
             message.setSender(sender);
             message.setReplyTo(Strings.emptyToNull(Util.toEmailListString(replyTo)));
             message.setPreferredLocale(preferredLocale);
@@ -360,7 +363,7 @@ public final class Message extends Message_Base implements Comparable<Message> {
         }
     }
 
-    public static MessageBuilder from(Sender sender) {
+    public static MessageBuilder from(final Sender sender) {
         return new MessageBuilder(sender);
     }
 
@@ -441,7 +444,7 @@ public final class Message extends Message_Base implements Comparable<Message> {
     }
 
     public Set<String> getTos() {
-        Set<String> tos = toEmailSet(getToSet());
+        final Set<String> tos = toEmailSet(getToSet());
         tos.addAll(getSingleTosSet());
         return tos;
     }
@@ -459,7 +462,7 @@ public final class Message extends Message_Base implements Comparable<Message> {
     }
 
     public Set<String> getBccs() {
-        Set<String> bccs = toEmailSet(getBccSet());
+        final Set<String> bccs = toEmailSet(getBccSet());
         bccs.addAll(getSingleBccsSet());
         return bccs;
     }
@@ -478,11 +481,11 @@ public final class Message extends Message_Base implements Comparable<Message> {
 
     public Set<Locale> getContentLocales() {
         return Stream.of(getSubject(), getTextBody(), getHtmlBody()).filter(Objects::nonNull)
-                .flatMap(c -> c.getLocales().stream()).collect(Collectors.toSet());
+                .flatMap(content -> content.getLocales().stream()).collect(Collectors.toSet());
     }
 
     public DateTime getSent() {
-        return getDispatchReport() != null ? getDispatchReport().getFinishedDelivery() : null;
+        return getDispatchReport() == null ? null : getDispatchReport().getFinishedDelivery();
     }
 
     @Atomic(mode = TxMode.WRITE)
@@ -509,15 +512,12 @@ public final class Message extends Message_Base implements Comparable<Message> {
     }
 
     public boolean isDeletable() {
-        if (getCreator() != null) {
-            return getCreator().equals(Authenticate.getUser()) && getDispatchReport() == null;
-        }
-        return true;
+        return getCreator() == null || getCreator().equals(Authenticate.getUser()) && getDispatchReport() == null;
     }
 
     @Override
-    public int compareTo(Message message) {
-        int c = -getCreated().compareTo(message.getCreated());
-        return c != 0 ? c : getExternalId().compareTo(message.getExternalId());
+    public int compareTo(final Message message) {
+        final int comparison = -getCreated().compareTo(message.getCreated());
+        return comparison == 0 ? getExternalId().compareTo(message.getExternalId()) : comparison;
     }
 }

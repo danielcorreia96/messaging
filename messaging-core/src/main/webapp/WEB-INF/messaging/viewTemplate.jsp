@@ -34,7 +34,7 @@ ${portal.toolkit()}
 				<spring:message code="label.template.id"/>
 			</th>
 			<td>
-					<code>${template.id}</code>
+					<code><c:out value="${template.id}"/></code>
 			</td>
 		</tr>
 		<c:if test="${not empty template.declaration.description}">
@@ -43,7 +43,7 @@ ${portal.toolkit()}
 				<spring:message code="label.template.description"/>
 			</th>
 			<td>
-				${template.declaration.description.content}
+				<c:out value="${template.declaration.description.content}"/>
 			</td>
 		</tr>
 		</c:if>
@@ -55,7 +55,7 @@ ${portal.toolkit()}
 			<td>
 				<ul class="list-unstyled">
 				<c:forEach items="${sort:mapSort(template.declaration.parameters)}" var="entry">
-					<li><em>${entry.key}</em>: ${entry.value.content}</li>
+					<li><em><c:out value="${entry.key}"/></em>: <c:out value="${entry.value.content}"/></li>
 				</c:forEach>
 				</ul>
 			</td>
@@ -69,7 +69,7 @@ ${portal.toolkit()}
 			<td>
 				<ul class="nav nav-pills">
 				<c:forEach items="${locales}" var="locale">
-					<li><a class="btn-sm localized" id="locale-${locale}">${locale.getDisplayName(locale)}</a></li>
+					<li><a class="btn-sm localized" id="locale-${locale}"><c:out value="${locale.getDisplayName(locale)}"/></a></li>
 				</c:forEach>
 				</ul>
 			</td>

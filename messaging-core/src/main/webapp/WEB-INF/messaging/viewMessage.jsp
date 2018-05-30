@@ -20,7 +20,7 @@ ${portal.toolkit()}
 				<spring:message code="label.message.created"/>
 			</th>
 			<td>
-				${message.created.toString("dd-MM-yyyy HH:mm:ss")}
+				<c:out value="${message.created.toString('dd-MM-yyyy HH:mm:ss')}"/>
 			</td>
 		</tr>
 		<tr>
@@ -55,13 +55,16 @@ ${portal.toolkit()}
 			<c:set var="pFailed" value="${100 *message.dispatchReport.failedCount/total}"/>
 			<c:set var="pDelivered" value="${100 * message.dispatchReport.deliveredCount/total}"/>
 			<div class="progress" style="margin: 0;">
-				<div class="progress-bar progress-bar-danger" style="width: ${pFailed}%" data-toggle="tooltip" data-placement="bottom" title="${failed} failed messages">
+				<div class="progress-bar progress-bar-danger" style="width: ${pFailed}%" data-toggle="tooltip" data-placement="bottom"
+					 title="<c:out value='${failed}'/> failed messages">
 					<fmt:formatNumber type="number" maxFractionDigits="1" value="${pFailed}"/>%
 				</div>
-				<div class="progress-bar progress-bar-warning" style="width: ${pInvalid}%" data-toggle="tooltip" data-placement="bottom" title="${invalid} invalid messages">
+				<div class="progress-bar progress-bar-warning" style="width: ${pInvalid}%" data-toggle="tooltip" data-placement="bottom"
+					 title="<c:out value='${invalid}'/> invalid messages">
 					<fmt:formatNumber type="number" maxFractionDigits="1" value="${pInvalid}"/>%
 				</div>
-				<div class="progress-bar progress-bar-success" style="width: ${pDelivered}%" data-toggle="tooltip" data-placement="bottom"  title="${delivered} delivered messages">
+				<div class="progress-bar progress-bar-success" style="width: ${pDelivered}%" data-toggle="tooltip" data-placement="bottom"
+					 title="<c:out value='${delivered}'/> delivered messages">
 					<fmt:formatNumber type="number" maxFractionDigits="1" value="${pDelivered}"/>%
 				</div>
 			</div>
@@ -76,7 +79,7 @@ ${portal.toolkit()}
 				<spring:message code="label.message.sender.name"/>
 			</th>
 			<td>
-				${message.sender.name}
+				<c:out value="${message.sender.name}"/>
 			</td>
 		</tr>
 		<tr>
@@ -84,7 +87,7 @@ ${portal.toolkit()}
 				<spring:message code="label.message.sender.address"/>
 			</th>
 			<td>
-				<code>${message.sender.address}</code>
+				<code><c:out value="${message.sender.address}"/></code>
 			</td>
 		</tr>
 		<tr>
@@ -92,7 +95,7 @@ ${portal.toolkit()}
 				<spring:message code="label.message.sent.by"/>
 			</th>
 			<td>
-				${message.creator.profile.displayName}
+				<c:out value="${message.creator.profile.displayName}"/>
 			</td>
 		</tr>
 		<c:if test="${not empty message.replyTo}">
@@ -102,7 +105,7 @@ ${portal.toolkit()}
 				</th>
 				<td>
 					<c:forEach items="${sort:uniqueSort(message.replyTosSet)}" var="replyTo">
-						<code>${replyTo}</code>
+						<code><c:out value="${replyTo}"/></code>
 					</c:forEach>
 				</td>
 			</tr>
@@ -115,7 +118,7 @@ ${portal.toolkit()}
 				<td>
 					<div style="overflow-y:auto; max-height:85px; display:block;">
 					<c:forEach items="${sort:uniqueSort(message.toGroups)}" var="to">
-						<code style="display: inline-block; margin: 2px;">${to.presentationName}</code>
+						<code style="display: inline-block; margin: 2px;"><c:out value="${to.presentationName}"/></code>
 					</c:forEach>
 					</div>
 				</td>
@@ -129,7 +132,7 @@ ${portal.toolkit()}
 				<td>
 					<div style="overflow-y:auto; max-height:85px; display:block;">
 					<c:forEach items="${sort:uniqueSort(message.ccGroups)}" var="cc">
-						<code style="display: inline-block; margin: 2px;">${cc.presentationName}</code>
+						<code style="display: inline-block; margin: 2px;"><c:out value="${cc.presentationName}"/></code>
 					</c:forEach>
 					</div>
 				</td>
@@ -143,7 +146,7 @@ ${portal.toolkit()}
 				<td>
 					<div style="overflow-y:auto; max-height:85px; display:block;">
 					<c:forEach items="${sort:uniqueSort(message.bccGroups)}" var="bcc">
-						<code style="display: inline-block; margin: 2px;">${bcc.presentationName}</code>
+						<code style="display: inline-block; margin: 2px;"><c:out value="${bcc.presentationName}"/></code>
 					</c:forEach>
 					</div>
 				</td>
@@ -156,7 +159,7 @@ ${portal.toolkit()}
 				</th>
 				<td>
 				<c:forEach items="${sort:uniqueSort(message.singleBccsSet)}" var="bcc">
-					<code>${bcc}</code>
+					<code><c:out value="${bcc}"/></code>
 				</c:forEach>
 				</td>
 			</tr>
@@ -168,7 +171,7 @@ ${portal.toolkit()}
 				</th>
 				<td>
 					<c:forEach items="${files}" var="entry">
-						<code style="display: inline-block; margin: 2px;"><a href=${entry.value}>${entry.key}</a></code>
+						<code style="display: inline-block; margin: 2px;"><a href=${entry.value}><c:out value="${entry.key}"/></a></code>
 					</c:forEach>
 				</td>
 			</tr>
@@ -178,7 +181,7 @@ ${portal.toolkit()}
 				<spring:message code="label.message.locale.preferred"/>
 			</th>
 			<td>
-				${message.preferredLocale.getDisplayName(message.preferredLocale)}
+				<c:out value="${message.preferredLocale.getDisplayName(message.preferredLocale)}"/>
 			</td>
 		</tr>
 		<tr>
@@ -188,7 +191,7 @@ ${portal.toolkit()}
 			<td>
 				<ul class="nav nav-pills">
 				<c:forEach items="${locales}" var="locale">
-					<li><a class="btn-sm localized" id="locale-${locale}">${locale.getDisplayName(locale)}</a></li>
+					<li><a class="btn-sm localized" id="locale-${locale}"><c:out value="${locale.getDisplayName(locale)}"/></a></li>
 				</c:forEach>
 				</ul>
 			</td>

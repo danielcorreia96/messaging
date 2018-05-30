@@ -1,12 +1,12 @@
 package org.fenixedu.messaging.core.domain;
 
 import org.fenixedu.bennu.MessagingConfiguration;
+import org.fenixedu.messaging.core.template.TemplateParameter;
 import pt.ist.fenixframework.Atomic;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -33,22 +33,25 @@ import static java.util.Objects.requireNonNull;
 import static pt.ist.fenixframework.FenixFramework.atomic;
 
 public class MessageTemplate extends MessageTemplate_Base implements Comparable<MessageTemplate> {
-    private static final HashMap<String, DeclareMessageTemplate> declareAnnotations = Maps.newHashMap();
-    private static final HashMap<String, MessageTemplateDeclaration> declarations = Maps.newHashMap();
-    private static final PebbleEngine engine;
+    private static final Map<String, DeclareMessageTemplate> DECLARE_ANNOTATIONS = Maps.newHashMap();
+    private static final Map<String, MessageTemplateDeclaration> DECLARATIONS = Maps.newHashMap();
+    private static final PebbleEngine PEBBLE_ENGINE;
 
     static {
         final Builder builder = new PebbleEngine.Builder();
         builder.loader(new StringLoader());
-        engine = builder.autoEscaping(false)
+        PEBBLE_ENGINE = builder.autoEscaping(false)
                 .newLineTrimming(MessagingConfiguration.getConfiguration().pebbleNewlineTrim())
                 .build();
     }
 
     public static class MessageTemplateDeclaration {
 
-        private LocalizedString description, defaultSubject, defaultTextBody, defaultHtmlBody;
-        private Map<String, LocalizedString> parameters;
+        private final LocalizedString description;
+        private final LocalizedString defaultSubject;
+        private final LocalizedString defaultTextBody;
+        private final LocalizedString defaultHtmlBody;
+        private final Map<String, LocalizedString> parameters;
 
         public LocalizedString getDescription() {
             return description;
@@ -70,18 +73,18 @@ public class MessageTemplate extends MessageTemplate_Base implements Comparable<
             return ImmutableMap.copyOf(parameters);
         }
 
-        protected MessageTemplateDeclaration(DeclareMessageTemplate decl) {
-            String bundle = decl.bundle();
+        protected MessageTemplateDeclaration(final DeclareMessageTemplate decl) {
+            final String bundle = decl.bundle();
             this.description = localized(decl.description(), bundle);
             this.defaultSubject = localized(decl.subject(), bundle);
             this.defaultTextBody = localized(decl.text(), bundle);
             this.defaultHtmlBody = localized(decl.html(), bundle);
             this.parameters = Arrays.stream(decl.parameters())
-                    .collect(Collectors.toMap(param -> param.id(), param -> localized(param.description(), bundle)));
+                    .collect(Collectors.toMap(TemplateParameter::id, param -> localized(param.description(), bundle)));
         }
     }
 
-    private static LocalizedString localized(String key, String bundle) {
+    private static LocalizedString localized(final String key, final String bundle) {
         if (key == null) {
             return new LocalizedString();
         }
@@ -91,11 +94,11 @@ public class MessageTemplate extends MessageTemplate_Base implements Comparable<
         return BundleUtil.getLocalizedString(bundle, key);
     }
 
-    protected MessageTemplate(DeclareMessageTemplate declaration) {
+    protected MessageTemplate(final DeclareMessageTemplate declaration) {
         super();
         setMessagingSystem(MessagingSystem.getInstance());
         setId(declaration.id());
-        declarations.put(getId(), new MessageTemplateDeclaration(declaration));
+        DECLARATIONS.put(getId(), new MessageTemplateDeclaration(declaration));
         reset();
     }
 
@@ -106,38 +109,38 @@ public class MessageTemplate extends MessageTemplate_Base implements Comparable<
     }
 
     public MessageTemplateDeclaration getDeclaration() {
-        return declarations.get(getId());
+        return DECLARATIONS.get(getId());
     }
 
     public boolean isDeclared() {
-        return declarations.containsKey(getId());
+        return DECLARATIONS.containsKey(getId());
     }
 
     public Set<Locale> getContentLocales() {
         return Stream.of(getSubject(), getTextBody(), getHtmlBody()).filter(Objects::nonNull)
-                .flatMap(c -> c.getLocales().stream()).collect(Collectors.toSet());
+                .flatMap(content -> content.getLocales().stream()).collect(Collectors.toSet());
     }
 
-    public LocalizedString getCompiledSubject(Map<String, Object> context) {
+    public LocalizedString getCompiledSubject(final Map<String, Object> context) {
         return compile(getId(), getSubject(), context);
     }
 
-    public LocalizedString getCompiledTextBody(Map<String, Object> context) {
+    public LocalizedString getCompiledTextBody(final Map<String, Object> context) {
         return compile(getId(), getTextBody(), context);
     }
 
-    public LocalizedString getCompiledHtmlBody(Map<String, Object> context) {
+    public LocalizedString getCompiledHtmlBody(final Map<String, Object> context) {
         return compile(getId(), getHtmlBody(), context);
     }
 
-    private static LocalizedString compile(String id, LocalizedString template, Map<String, Object> context) {
-        LocalizedString.Builder builder = new LocalizedString.Builder();
-        for (Locale locale : template.getLocales()) {
+    private static LocalizedString compile(final String templateId, final LocalizedString template, final Map<String, Object> context) {
+        final LocalizedString.Builder builder = new LocalizedString.Builder();
+        for (final Locale locale : template.getLocales()) {
             try (StringWriter writer = new StringWriter()) {
-                engine.getTemplate(template.getContent(locale)).evaluate(writer, context, locale);
+                PEBBLE_ENGINE.getTemplate(template.getContent(locale)).evaluate(writer, context, locale);
                 builder.with(locale, writer.toString());
             } catch (PebbleException | IOException e) {
-                throw MessagingDomainException.malformedTemplate(e, id);
+                throw MessagingDomainException.malformedTemplate(e, templateId);
             }
         }
         return builder.build();
@@ -148,32 +151,32 @@ public class MessageTemplate extends MessageTemplate_Base implements Comparable<
     }
 
     public static Set<MessageTemplate> undeclared() {
-        return MessagingSystem.getInstance().getTemplateSet().stream().filter(t -> !t.isDeclared()).collect(Collectors.toSet());
+        return MessagingSystem.getInstance().getTemplateSet().stream().filter(template -> !template.isDeclared()).collect(Collectors.toSet());
     }
 
-    public static MessageTemplate get(String id) {
-        return MessagingSystem.getInstance().getTemplateSet().stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+    public static MessageTemplate get(final String templateId) {
+        return MessagingSystem.getInstance().getTemplateSet().stream().filter(template -> template.getId().equals(templateId)).findFirst().orElse(null);
     }
 
-    public static void declare(DeclareMessageTemplate decl) {
-        declareAnnotations.put(decl.id(), decl);
+    public static void declare(final DeclareMessageTemplate decl) {
+        DECLARE_ANNOTATIONS.put(decl.id(), decl);
     }
 
     public static void reifyDeclarations() {
-        all().forEach(t -> {
-            declareAnnotations.computeIfPresent(t.getId(), (id, declaration) -> {
-                declarations.put(id, new MessageTemplateDeclaration(declaration));
+        all().forEach(template -> {
+            DECLARE_ANNOTATIONS.computeIfPresent(template.getId(), (templateId, declaration) -> {
+                DECLARATIONS.put(templateId, new MessageTemplateDeclaration(declaration));
                 return null;
             });
         });
-        declareAnnotations.forEach((id, declaration) -> atomic(() -> {
+        DECLARE_ANNOTATIONS.forEach((templateId, declaration) -> atomic(() -> {
             new MessageTemplate(declaration);
         }));
-        declareAnnotations.clear();
+        DECLARE_ANNOTATIONS.clear();
     }
 
     public void reset() {
-        MessageTemplateDeclaration declaration = getDeclaration();
+        final MessageTemplateDeclaration declaration = getDeclaration();
         if (declaration != null) {
             setSubject(declaration.getDefaultSubject());
             setHtmlBody(declaration.getDefaultHtmlBody());
@@ -182,17 +185,17 @@ public class MessageTemplate extends MessageTemplate_Base implements Comparable<
     }
 
     @Override
-    public void setSubject(LocalizedString subject) {
+    public void setSubject(final LocalizedString subject) {
         super.setSubject(requireNonNull(subject));
     }
 
     @Override
-    public void setTextBody(LocalizedString textBody) {
+    public void setTextBody(final LocalizedString textBody) {
         super.setTextBody(requireNonNull(textBody));
     }
 
     @Override
-    public void setHtmlBody(LocalizedString htmlBody) {
+    public void setHtmlBody(final LocalizedString htmlBody) {
         super.setHtmlBody(requireNonNull(htmlBody));
     }
 
@@ -203,9 +206,9 @@ public class MessageTemplate extends MessageTemplate_Base implements Comparable<
     }
 
     @Override
-    public int compareTo(MessageTemplate template) {
-        int c = getId().compareTo(template.getId());
-        return c != 0 ? c : getExternalId().compareTo(template.getExternalId());
+    public int compareTo(final MessageTemplate template) {
+        final int comparison = getId().compareTo(template.getId());
+        return comparison == 0 ? getExternalId().compareTo(template.getExternalId()) : comparison;
     }
 
 }

@@ -33,24 +33,24 @@ public class MessagingDomainException extends DomainException {
     private static final long serialVersionUID = -8622024813103819898L;
     protected static final String BUNDLE = "MessagingResources";
 
-    protected MessagingDomainException(String bundle, String key, String... args) {
+    protected MessagingDomainException(final String bundle, final String key, final String... args) {
         super(bundle, key, args);
     }
 
-    protected MessagingDomainException(Response.Status status, String bundle, String key, String... args) {
+    protected MessagingDomainException(final Response.Status status, final String bundle, final String key, final String... args) {
         super(status, bundle, key, args);
     }
 
-    protected MessagingDomainException(Throwable cause, String bundle, String key, String... args) {
+    protected MessagingDomainException(final Throwable cause, final String bundle, final String key, final String... args) {
         super(cause, bundle, key, args);
     }
 
-    protected MessagingDomainException(Throwable cause, Response.Status status, String bundle, String key, String... args) {
+    protected MessagingDomainException(final Throwable cause, final Response.Status status, final String bundle, final String key, final String... args) {
         super(cause, status, bundle, key, args);
     }
 
-    public static MessagingDomainException malformedTemplate(Exception e, String key) {
-        return new MessagingDomainException(e, BUNDLE, "error.template.malformed", key);
+    public static MessagingDomainException malformedTemplate(final Exception exception, final String key) {
+        return new MessagingDomainException(exception, BUNDLE, "error.template.malformed", key);
     }
 
     public static MessagingDomainException forbidden() {

@@ -14,11 +14,11 @@ import java.util.Set;
 public class MessageTask extends CronTask {
     @Override
     public void runTask() {
-        Set<Sender> sendersFromMessages = new HashSet<>();
+        final Set<Sender> sendersFromMessages = new HashSet<>();
         int dispatched = 0;
         for (final Message message : MessagingSystem.getPendingMessages()) {
-            long start = System.currentTimeMillis();
-            MessageDispatchReport report = MessagingSystem.dispatch(message);
+            final long start = System.currentTimeMillis();
+            final MessageDispatchReport report = MessagingSystem.dispatch(message);
             if (report != null) {
                 getLogger().info("Dispatched message: {} in {}ms for {} addresses", message.getExternalId(), System
                         .currentTimeMillis() - start, report.getTotalCount());
@@ -32,7 +32,7 @@ public class MessageTask extends CronTask {
 
         taskLog("%d possible senders to prune%n", sendersFromMessages.size());
         int pruned = 0;
-        for (Sender sender : sendersFromMessages){
+        for (final Sender sender : sendersFromMessages){
             int diff = sender.getMessageSet().size();
             sender.pruneMessages();
             diff = diff - sender.getMessageSet().size();

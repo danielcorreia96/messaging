@@ -3,14 +3,7 @@ package org.fenixedu.messaging.emaildispatch.domain;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,8 +40,6 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
     private static final int MAX_RECIPIENTS = EmailDispatchConfiguration.getConfiguration().mailSenderMaxRecipients();
     private static final String MIME_MESSAGE_ID_SUFFIX = EmailDispatchConfiguration.getConfiguration().mailMimeMessageIdSuffix();
 
-    private static Session SESSION = null;
-
     private static synchronized Session session() {
         final Properties properties = new Properties();
         final ConfigurationProperties conf = EmailDispatchConfiguration.getConfiguration();
@@ -56,11 +47,10 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
         properties.put("mail.smtp.name", conf.mailSmtpName());
         properties.put("mail.smtp.port", conf.mailSmtpPort());
         properties.put("mailSender.max.recipients", conf.mailSenderMaxRecipients());
-        SESSION = Session.getDefaultInstance(properties, null);
-        return SESSION;
+        return Session.getDefaultInstance(properties, null);
     }
 
-    protected MimeMessageHandler(Locale locale, Collection<String> tos, Collection<String> ccs, Collection<String> bccs) {
+    protected MimeMessageHandler(final Locale locale, final Collection<String> tos, final Collection<String> ccs, final Collection<String> bccs) {
         super();
         setLocale(locale);
         if (tos != null) {
@@ -89,11 +79,11 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
         final Message message = getReport().getMessage();
         final Locale locale = getLocale();
         final String[] languages = {locale.toLanguageTag()};
-        MimeMessage mimeMessage = new MimeMessage(session()) {
-            private String fenixMessageId = null;
+        final MimeMessage mimeMessage = new MimeMessage(session()) {
+            private String fenixMessageId;
 
             @Override
-            public String getMessageID() throws MessagingException {
+            public String getMessageID() {
                 if (fenixMessageId == null) {
                     fenixMessageId = getExternalId() + "." + new DateTime().getMillis() + "@" + MIME_MESSAGE_ID_SUFFIX;
                 }
@@ -114,7 +104,7 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
 
         final String replyTo = message.getReplyTo();
         if (StringUtils.hasText(replyTo)) {
-            Address[] replyTos = { new InternetAddress(replyTo) };
+            final Address[] replyTos = { new InternetAddress(replyTo) };
             mimeMessage.setReplyTo(replyTos);
         }
 
@@ -182,20 +172,16 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
         return mimeMessage;
     }
 
-    private static String getContent(LocalizedString ls, Locale l) {
-        if (ls != null) {
-            String s = ls.getContent(l);
-            if (s == null) {
-                return ls.getContent();
-            }
-            return s;
+    private static String getContent(final LocalizedString localizedString, final Locale locale) {
+        if (localizedString != null) {
+            return Optional.ofNullable(localizedString.getContent(locale)).orElseGet(localizedString::getContent);
         }
         return null;
     }
 
-    public static Collection<MimeMessageHandler> create(Map<Locale, Set<String>> tos, Map<Locale, Set<String>> ccs,
-                                                        Map<Locale, Set<String>> bccs) {
-        return Stream.of(tos, ccs, bccs).flatMap(m -> m.keySet().stream()).distinct()
+    public static Collection<MimeMessageHandler> create(final Map<Locale, Set<String>> tos, final Map<Locale, Set<String>> ccs,
+            final Map<Locale, Set<String>> bccs) {
+        return Stream.of(tos, ccs, bccs).flatMap(localeSetMap -> localeSetMap.keySet().stream()).distinct()
                 .flatMap(locale -> bestEffortCreate(locale, tos.get(locale), ccs.get(locale), bccs.get(locale)).stream())
                 .collect(Collectors.toSet());
     }
@@ -204,35 +190,42 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
      * that, in the most common case where there is an overflow of Bccs, at least the Tos and Ccs will be visible to each other.
      * Note however that this intent is somewhat wasted when there are multiple preferred locales among Tos and Ccs due to the
      * locale separation */
-    private static Collection<MimeMessageHandler> bestEffortCreate(Locale locale, Collection<String> tos, Collection<String> ccs,
-                                                                   Collection<String> bccs) {
-        Collection<MimeMessageHandler> handlers = new ArrayList<>();
-        List<String> all =
-                Stream.of(tos, ccs, bccs).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
-        List<String> partial;
-        List<List<String>> split = Lists.partition(all, MAX_RECIPIENTS);
-        MimeMessageHandler handler;
+    private static Collection<MimeMessageHandler> bestEffortCreate(final Locale locale, final Collection<String> tos, final Collection<String> ccs,
+            final Collection<String> bccs) {
+        final List<String> all = Stream.of(tos, ccs, bccs).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
+        final List<List<String>> split = Lists.partition(all, MAX_RECIPIENTS);
 
-        int nHandlers = split.size(), nRecipients = all.size(), nTos = tos != null ? tos.size() : 0,
-                nCcs = ccs != null ? ccs.size() : 0, nVisible = nTos + nCcs;
-        int ccStart, bccStart;
-        int mixedTos = nTos % MAX_RECIPIENTS, mixedVisible = nVisible % MAX_RECIPIENTS;
+        final int nHandlers = split.size();
+        final int nRecipients = all.size();
+        final int nTos = tos == null ? 0 : tos.size();
+        final int nCcs = ccs == null ? 0 : ccs.size();
+        final int nVisible = nTos + nCcs;
+        final int ccStart;
+        final int bccStart;
+        final int mixedTos = nTos % MAX_RECIPIENTS;
+        final int mixedVisible = nVisible % MAX_RECIPIENTS;
+
         if (nTos == nRecipients && mixedTos != 0) {
             ccStart = bccStart = nHandlers;
-        } else if (nVisible == nRecipients && mixedVisible != 0) {
+        }
+        else if (nVisible == nRecipients && mixedVisible != 0) {
             ccStart = nTos / MAX_RECIPIENTS;
             bccStart = nHandlers;
-        } else {
+        }
+        else {
             ccStart = nTos / MAX_RECIPIENTS;
             bccStart = nVisible / MAX_RECIPIENTS;
         }
 
         int i;
+        final Collection<MimeMessageHandler> handlers = new ArrayList<>();
         for (i = 0; i < ccStart; i++) { // Tos only
             handlers.add(new MimeMessageHandler(locale, split.get(i), null, null));
         }
+        List<String> partial;
         if (i < nHandlers && mixedTos != 0) {
             partial = split.get(i);
+            MimeMessageHandler handler;
             if (nCcs == 0) { //Tos along with Bccs
                 handler = new MimeMessageHandler(locale, partial.subList(0, mixedTos), null,
                         partial.subList(mixedTos, partial.size()));
@@ -263,9 +256,9 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
 
     @Atomic(mode = TxMode.WRITE)
     public void deliver() throws MessagingException {
-        LocalEmailMessageDispatchReport report = getReport();
+        final LocalEmailMessageDispatchReport report = getReport();
         try {
-            MimeMessage message = mimeMessage();
+            final MimeMessage message = mimeMessage();
             Transport.send(message);
             report.setDeliveredCount(report.getDeliveredCount() + message.getAllRecipients().length);
         } catch (SendFailedException e) {
@@ -274,7 +267,7 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
             }
             if (e.getInvalidAddresses() != null) {
                 report.setFailedCount(report.getFailedCount() + e.getInvalidAddresses().length);
-                for (Address failed : e.getInvalidAddresses()) {
+                for (final Address failed : e.getInvalidAddresses()) {
                     EmailBlacklist.getInstance().addFailedAddress(failed.toString());
                 }
             }
@@ -285,14 +278,14 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
         delete();
     }
 
-    private void resend(Address[] validUnsentAddresses) {
-        Set<String> currentTos = MessagingSystem.Util.toEmailSet(getToAddresses());
-        Set<String> currentCcs = MessagingSystem.Util.toEmailSet(getCcAddresses());
-        Map<RecipientType, List<String>> unsent =
-                Stream.of(validUnsentAddresses).map(Address::toString).collect(Collectors.groupingBy(e -> {
-                    if (currentTos.contains(e)) {
+    private void resend(final Address... validUnsentAddresses) {
+        final Set<String> currentTos = MessagingSystem.Util.toEmailSet(getToAddresses());
+        final Set<String> currentCcs = MessagingSystem.Util.toEmailSet(getCcAddresses());
+        final Map<RecipientType, List<String>> unsent =
+                Stream.of(validUnsentAddresses).map(Address::toString).collect(Collectors.groupingBy(email -> {
+                    if (currentTos.contains(email)) {
                         return RecipientType.TO;
-                    } else if (currentCcs.contains(e)) {
+                    } else if (currentCcs.contains(email)) {
                         return RecipientType.CC;
                     } else {
                         return RecipientType.BCC;

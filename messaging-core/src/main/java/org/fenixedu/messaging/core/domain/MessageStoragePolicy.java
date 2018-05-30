@@ -31,10 +31,10 @@ public class MessageStoragePolicy implements Serializable {
         POLICIES.put(NONE_PREFIX, NONE);
     }
 
-    private Period period;
-    private Integer amount;
+    private final Period period;
+    private final Integer amount;
 
-    protected MessageStoragePolicy(Integer amount, Period period) {
+    protected MessageStoragePolicy(final Integer amount, final Period period) {
         this.period = period;
         if(amount != null && amount < 0) {
             throw new IllegalArgumentException("Message storage policy amount cannot be negative.");
@@ -42,9 +42,9 @@ public class MessageStoragePolicy implements Serializable {
         this.amount = amount;
     }
 
-    public static MessageStoragePolicy keep(Integer amount, Period period) {
-        String serialization = serialize(amount, period);
-        MessageStoragePolicy policy = (MessageStoragePolicy) POLICIES.get(serialization);
+    public static MessageStoragePolicy keep(final Integer amount, final Period period) {
+        final String serialization = serialize(amount, period);
+        MessageStoragePolicy policy = POLICIES.get(serialization);
         if (policy != null) {
             return policy;
         }
@@ -53,11 +53,11 @@ public class MessageStoragePolicy implements Serializable {
         return policy;
     }
 
-    public static MessageStoragePolicy keep(Period period) {
+    public static MessageStoragePolicy keep(final Period period) {
         return keep(null, period);
     }
 
-    public static MessageStoragePolicy keep(Integer amount) {
+    public static MessageStoragePolicy keep(final Integer amount) {
         return keep(amount, null);
     }
 
@@ -85,22 +85,22 @@ public class MessageStoragePolicy implements Serializable {
         return isKeepNone(amount);
     }
 
-    protected static boolean isKeepAll(Integer amount, Period period) {
+    protected static boolean isKeepAll(final Integer amount, final Period period) {
         return amount == null && period == null;
     }
 
-    protected static boolean isKeepNone(Integer amount) {
-        return amount != null && amount.intValue() == 0;
+    protected static boolean isKeepNone(final Integer amount) {
+        return amount != null && amount == 0;
     }
 
-    protected void pruneMessages(Sender sender) {
-        Set<Message> sent = sender.getMessageSet().stream().filter(m -> m.getSent() != null).collect(Collectors.toSet());
+    protected void pruneMessages(final Sender sender) {
+        final Set<Message> sent = sender.getMessageSet().stream().filter(message -> message.getSent() != null).collect(Collectors.toSet());
         if (!isKeepAll()) {
             if (!isKeepNone()) {
                 Stream<Message> keep = sent.stream();
                 if (period != null) {
-                    DateTime cut = DateTime.now().minus(period);
-                    keep = keep.filter(m -> m.getCreated().isAfter(cut));
+                    final DateTime cut = DateTime.now().minus(period);
+                    keep = keep.filter(message -> message.getCreated().isAfter(cut));
                 }
                 if (amount != null) {
                     keep = keep.sorted().limit(amount);
@@ -111,28 +111,30 @@ public class MessageStoragePolicy implements Serializable {
         }
     }
 
-    public static MessageStoragePolicy internalize(String serialization) {
-        String[] attrs = serialization.split(SERIALIZATION_SEPARATOR);
+    public static MessageStoragePolicy internalize(final String serialization) {
+        final String[] attrs = serialization.split(SERIALIZATION_SEPARATOR);
         Integer amount = null;
         Period period = null;
-        for (String attr : attrs) {
+        for (final String attr : attrs) {
             switch (attr.substring(0, 1)) {
-            case AMOUNT_PREFIX:
-                amount = Integer.valueOf(attr.substring(1));
-                break;
-            case PERIOD_PREFIX:
-                period = Period.parse(attr);
-                break;
-            case ALL_PREFIX:
-                return keepAll();
-            case NONE_PREFIX:
-                return keepNone();
+                case AMOUNT_PREFIX:
+                    amount = Integer.valueOf(attr.substring(1));
+                    break;
+                case PERIOD_PREFIX:
+                    period = Period.parse(attr);
+                    break;
+                case ALL_PREFIX:
+                    return keepAll();
+                case NONE_PREFIX:
+                    return keepNone();
+                default:
+                    break;
             }
         }
         return keep(amount, period);
     }
 
-    public static MessageStoragePolicy internalize(String[] parts) {
+    public static MessageStoragePolicy internalize(final String... parts) {
         return internalize(SERIALIZATION_JOINER.join(parts));
     }
 
@@ -140,33 +142,33 @@ public class MessageStoragePolicy implements Serializable {
         return serialize(amount, period);
     }
 
-    protected static String serialize(Integer amount, Period period) {
+    protected static String serialize(final Integer amount, final Period period) {
         if (isKeepAll(amount, period)) {
             return ALL_PREFIX;
         }
         if (isKeepNone(amount)) {
             return NONE_PREFIX;
         }
-        List<String> parts = new ArrayList<>();
+        final List<String> parts = new ArrayList<>();
         if (period != null) {
             parts.add(period.toString());
         }
         if (amount != null) {
-            parts.add(AMOUNT_PREFIX + amount.intValue());
+            parts.add(AMOUNT_PREFIX + amount);
         }
         return SERIALIZATION_JOINER.join(parts);
     }
 
     @Override
     public String toString() {
-        String action = BundleUtil.getString(BUNDLE, "name.storage.policy");
+        final String action = BundleUtil.getString(BUNDLE, "name.storage.policy");
         if (isKeepAll()) {
             return PRESENTATION_JOINER.join(action, BundleUtil.getString(BUNDLE, "name.storage.policy.all"));
         }
         if (isKeepNone()) {
             return PRESENTATION_JOINER.join(action, BundleUtil.getString(BUNDLE, "name.storage.policy.none"));
         }
-        List<String> parts = new ArrayList<>();
+        final List<String> parts = new ArrayList<>();
         parts.add(action);
         if (amount != null) {
             parts.add(BundleUtil.getString(BUNDLE, "name.storage.policy.amount", Integer.toString(amount)));

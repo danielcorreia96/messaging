@@ -18,10 +18,10 @@ public class MessageTemplateDeclarationInitializer implements ServletContainerIn
     private static final Logger LOG = LoggerFactory.getLogger(MessageTemplateDeclarationInitializer.class);
 
     @Override
-    public void onStartup(Set<Class<?>> classes, ServletContext ctx) throws ServletException {
+    public void onStartup(final Set<Class<?>> classes, final ServletContext ctx) throws ServletException {
         LOG.info("Processing messaging templates.");
         if (classes != null) {
-            classes.stream().flatMap(c -> Arrays.stream(c.getAnnotationsByType(DeclareMessageTemplate.class)))
+            classes.stream().flatMap(clazz -> Arrays.stream(clazz.getAnnotationsByType(DeclareMessageTemplate.class)))
                     .forEach(MessageTemplate::declare);
         }
     }

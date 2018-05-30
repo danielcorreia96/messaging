@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 public class PersistentNamedGroup extends PersistentNamedGroup_Base {
 
-    protected PersistentNamedGroup(LocalizedString name, Group group) {
+    protected PersistentNamedGroup(final LocalizedString name, final Group group) {
         super();
         setName(name);
         setGroup(group.toPersistentGroup());
@@ -25,19 +25,19 @@ public class PersistentNamedGroup extends PersistentNamedGroup_Base {
     }
 
     @Override protected Collection<Relation<?, ?>> getContextRelations() {
-        Set<Relation<?, ?>> set = new HashSet<>();
+        final Set<Relation<?, ?>> set = new HashSet<>();
         set.add(getRelationNamedGroupsRoot());
         set.add(getRelationPersistentNamedGroupGroup());
         set.addAll(super.getContextRelations());
         return set;
     }
 
-    public static PersistentGroup getInstance(LocalizedString name, Group group) {
+    public static PersistentGroup getInstance(final LocalizedString name, final Group group) {
         return singleton( () -> select(name,group), () -> new PersistentNamedGroup(name,group));
     }
 
-    private static  Optional<PersistentNamedGroup> select(LocalizedString name, Group group) {
-        Stream<PersistentNamedGroup> stream = Bennu.getInstance().getNamedGroupsSet().stream();
+    private static  Optional<PersistentNamedGroup> select(final LocalizedString name, final Group group) {
+        final Stream<PersistentNamedGroup> stream = Bennu.getInstance().getNamedGroupsSet().stream();
         return stream.filter(namedGroup -> Objects.equals(namedGroup.getName(),name)
                 && Objects.equals(namedGroup.getGroup(),group.toPersistentGroup())).findAny();
     }

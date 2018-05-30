@@ -8,8 +8,6 @@ import org.fenixedu.bennu.spring.portal.SpringFunctionality;
 import org.fenixedu.messaging.core.domain.MessagingSystem;
 import org.fenixedu.messaging.core.domain.Sender;
 import org.fenixedu.messaging.core.domain.Sender_Base;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,8 +21,6 @@ import java.util.HashMap;
 @RequestMapping("/messaging/subscriptions")
 public class OptInConfigController {
 
-    private static final Logger logger = LoggerFactory.getLogger(OptInConfigController.class);
-
     @RequestMapping(value = { "", "/" })
     public RedirectView redirectToConfiguration() {
         return new RedirectView("/messaging/subscriptions/senders", true);
@@ -32,7 +28,7 @@ public class OptInConfigController {
 
     @RequestMapping(value = { "/senders", "/senders/" })
     public String listSenders(final Model model) {
-        HashMap<Sender, Boolean> optInRequiredSenders = new HashMap<>();
+        final HashMap<Sender, Boolean> optInRequiredSenders = new HashMap<>();
         Sender.all().stream()
                 .filter(Sender_Base::getOptInRequired)
                 .filter(sender -> sender.getRecipients().stream().anyMatch(group -> group.isMember(Authenticate.getUser())))
@@ -51,7 +47,7 @@ public class OptInConfigController {
     }
 
     @RequestMapping(value = {"/optIn/{sender}"})
-    public ResponseEntity optIn(@PathVariable Sender sender){
+    public ResponseEntity optIn(@PathVariable final Sender sender){
         final User user = Authenticate.getUser();
         FenixFramework.atomic(() -> {
             sender.addOptedInUser(user);
@@ -61,7 +57,7 @@ public class OptInConfigController {
     }
 
     @RequestMapping(value = {"/optOut/{sender}"})
-    public ResponseEntity optOut(@PathVariable Sender sender){
+    public ResponseEntity optOut(@PathVariable final Sender sender){
         final User user = Authenticate.getUser();
         FenixFramework.atomic(() -> {
             sender.removeOptedInUser(user);

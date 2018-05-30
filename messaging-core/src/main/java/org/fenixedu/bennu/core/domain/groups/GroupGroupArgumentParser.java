@@ -7,11 +7,11 @@ import org.fenixedu.bennu.core.groups.Group;
 @GroupArgumentParser
 public class GroupGroupArgumentParser implements ArgumentParser<Group> {
 
-    @Override public Group parse(String s) {
-        return Group.parse(s);
+    @Override public Group parse(final String groupString) {
+        return Group.parse(groupString);
     }
 
-    @Override public String serialize(Group group) {
+    @Override public String serialize(final Group group) {
         return group.getExpression();
     }
 

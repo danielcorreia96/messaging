@@ -14,18 +14,18 @@ import org.fenixedu.messaging.emaildispatch.domain.LocalEmailMessageDispatchRepo
 public class EmailDispatcherContextListener implements ServletContextListener {
     public static class LocalEmailMessageDispatcher implements MessageDispatcher {
         @Override
-        public MessageDispatchReport dispatch(Message message) {
+        public MessageDispatchReport dispatch(final Message message) {
             return LocalEmailMessageDispatchReport.dispatch(message);
         }
     }
 
     @Override
-    public void contextInitialized(ServletContextEvent sce) {
+    public void contextInitialized(final ServletContextEvent sce) {
         MessagingSystem.setMessageDispatcher(new LocalEmailMessageDispatcher());
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent sce) {
+    public void contextDestroyed(final ServletContextEvent sce) {
         MessagingSystem.setMessageDispatcher(null);
     }
 }

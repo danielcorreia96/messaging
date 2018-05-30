@@ -10,7 +10,7 @@
 			</span>
 			<span class="input-group-addon" style="padding: 0 5px;"><spring:message code="label.page"/></span>
 			<input id="page-select" class="form-control" style="text-align: right; width: 55px; padding: 0 5px;" type="number" min="1" max="${pages}" value="${page}"/>
-			<span class="input-group-addon" style="padding: 0 5px;"><spring:message code="label.of"/> ${pages}</span>
+			<span class="input-group-addon" style="padding: 0 5px;"><spring:message code="label.of"/> <c:out value="${pages}"/></span>
 			<span class="input-group-btn">
 				<a class="btn btn-info ${page == pages ? 'disabled' : ''}" href="${pageContext.request.contextPath}/${path}?page=${page+1}&items=${items}&search=${search}">&raquo;</a>
 			</span>

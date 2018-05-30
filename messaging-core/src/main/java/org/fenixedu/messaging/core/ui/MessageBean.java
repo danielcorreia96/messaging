@@ -184,10 +184,10 @@ public class MessageBean extends MessageContentBean {
         lockedAttachments.add(file);
     }
 
-    Message send() {
+    public Message send() {
         final Collection<String> errors = validate();
         if (errors.isEmpty()) {
-            MessageBuilder builder =
+            final MessageBuilder builder =
                     Message.from(getSender()).preferredLocale(getPreferredLocale()).subject(getSubject());
             final String replyTos = getReplyTo();
             if (replyTos != null){
@@ -322,7 +322,7 @@ public class MessageBean extends MessageContentBean {
      * @throws NullPointerException
      *         if recipient parameter or system configuration's secret key is not defined
      */
-    static JsonObject buildRecipientJson(final Sender sender, final Group recipient) {
+    public static JsonObject buildRecipientJson(final Sender sender, final Group recipient) {
         requireNonNull(recipient);
         final ConfigurationProperties config = MessagingConfiguration.getConfiguration();
         requireNonNull(config.jwtKey());

@@ -8,11 +8,11 @@ import org.fenixedu.commons.i18n.LocalizedString;
 @GroupArgumentParser
 public class LocalizedStringGroupArgumentParser implements ArgumentParser<LocalizedString> {
 
-    @Override public LocalizedString parse(String s) {
-        return LocalizedString.fromJson(new JsonParser().parse(s));
+    @Override public LocalizedString parse(final String jsonString) {
+        return LocalizedString.fromJson(new JsonParser().parse(jsonString));
     }
 
-    @Override public String serialize(LocalizedString localizedString) {
+    @Override public String serialize(final LocalizedString localizedString) {
         return localizedString.json().toString();
     }
 

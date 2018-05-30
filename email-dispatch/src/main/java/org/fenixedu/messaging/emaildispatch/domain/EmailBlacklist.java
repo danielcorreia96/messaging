@@ -19,7 +19,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class EmailBlacklist extends EmailBlacklist_Base {
-    private static final Logger logger = LoggerFactory.getLogger(LocalEmailMessageDispatchReport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LocalEmailMessageDispatchReport.class);
 
     private static final String TIMESTAMP = "ts";
     private static final String EMAIL = "eml";
@@ -33,37 +33,36 @@ public class EmailBlacklist extends EmailBlacklist_Base {
     }
 
     public static EmailBlacklist getInstance() {
-        EmailBlacklist instance = MessagingSystem.getInstance().getBlacklist();
-        return instance != null ? instance : create();
+        final EmailBlacklist instance = MessagingSystem.getInstance().getBlacklist();
+        return instance == null ? create() : instance;
     }
 
     @Atomic(mode = TxMode.WRITE)
     private static EmailBlacklist create() {
-        EmailBlacklist instance = MessagingSystem.getInstance().getBlacklist();
-        return instance != null ? instance : new EmailBlacklist();
+        final EmailBlacklist instance = MessagingSystem.getInstance().getBlacklist();
+        return instance == null ? new EmailBlacklist() : instance;
     }
 
     @Override
     protected JsonArray getBlacklist() {
-        return super.getBlacklist() == null || super.getBlacklist().isJsonNull() ? new JsonArray() : super.getBlacklist()
-                .getAsJsonArray();
+        return super.getBlacklist() == null || super.getBlacklist().isJsonNull() ? new JsonArray() : super.getBlacklist().getAsJsonArray();
     }
 
-    public void addInvalidAddress(String invalid) {
+    public void addInvalidAddress(final String invalid) {
         log(invalid, STATUS_INVALID);
-        logger.warn("Blacklisting email {} because is invalid", invalid);
+        LOGGER.warn("Blacklisting email {} because is invalid", invalid);
     }
 
-    public void addFailedAddress(String failed) {
+    public void addFailedAddress(final String failed) {
         log(failed, STATUS_FAILED);
-        logger.warn("Blacklisting email {} because it failed a deliver", failed);
+        LOGGER.warn("Blacklisting email {} because it failed a deliver", failed);
     }
 
-    public void pruneOldLogs(DateTime before) {
-        JsonArray newBl = new JsonArray();
-        for (JsonElement log : getBlacklist().getAsJsonArray()) {
-            String ts = log.getAsJsonObject().get(TIMESTAMP).getAsString();
-            if (!DateTime.parse(ts).isBefore(before)) {
+    public void pruneOldLogs(final DateTime before) {
+        final JsonArray newBl = new JsonArray();
+        for (final JsonElement log : getBlacklist().getAsJsonArray()) {
+            final String timestamp = log.getAsJsonObject().get(TIMESTAMP).getAsString();
+            if (!DateTime.parse(timestamp).isBefore(before)) {
                 newBl.add(log);
             }
         }
@@ -71,8 +70,8 @@ public class EmailBlacklist extends EmailBlacklist_Base {
     }
 
     public Set<String> getInvalidEmails() {
-        Set<String> invalid = new HashSet<>();
-        for (JsonElement log : getBlacklist().getAsJsonArray()) {
+        final Set<String> invalid = new HashSet<>();
+        for (final JsonElement log : getBlacklist().getAsJsonArray()) {
             if (log.getAsJsonObject().get(STATUS).getAsString().equals(STATUS_INVALID)) {
                 invalid.add(log.getAsJsonObject().get(EMAIL).getAsString());
             }
@@ -80,9 +79,9 @@ public class EmailBlacklist extends EmailBlacklist_Base {
         return invalid;
     }
 
-    public Set<String> getFailedEmails(int times) {
-        Multiset<String> failed = HashMultiset.create();
-        for (JsonElement log : getBlacklist().getAsJsonArray()) {
+    public Set<String> getFailedEmails(final int times) {
+        final Multiset<String> failed = HashMultiset.create();
+        for (final JsonElement log : getBlacklist().getAsJsonArray()) {
             if (log.getAsJsonObject().get(STATUS).getAsString().equals(STATUS_FAILED)) {
                 failed.add(log.getAsJsonObject().get(EMAIL).getAsString());
             }
@@ -90,13 +89,13 @@ public class EmailBlacklist extends EmailBlacklist_Base {
         return failed.stream().filter(email -> failed.count(email) > times).collect(Collectors.toSet());
     }
 
-    private void log(String email, String status) {
-        JsonObject log = new JsonObject();
+    private void log(final String email, final String status) {
+        final JsonObject log = new JsonObject();
         log.addProperty(TIMESTAMP, new DateTime().toString());
         log.addProperty(EMAIL, email);
         log.addProperty(STATUS, status);
-        JsonArray bl = getBlacklist();
-        bl.add(log);
-        setBlacklist(bl);
+        final JsonArray blacklist = getBlacklist();
+        blacklist.add(log);
+        setBlacklist(blacklist);
     }
 }

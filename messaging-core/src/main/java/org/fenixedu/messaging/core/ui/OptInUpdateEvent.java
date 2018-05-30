@@ -8,7 +8,7 @@ public class OptInUpdateEvent {
     private User user;
     private boolean newOptInStatus;
 
-    public OptInUpdateEvent(Sender sender, User user, boolean newOptInStatus) {
+    public OptInUpdateEvent(final Sender sender, final User user, final boolean newOptInStatus) {
         this.sender = sender;
         this.user = user;
         this.newOptInStatus = newOptInStatus;
@@ -18,7 +18,7 @@ public class OptInUpdateEvent {
         return sender;
     }
 
-    public void setSender(Sender sender) {
+    public void setSender(final Sender sender) {
         this.sender = sender;
     }
 
@@ -26,7 +26,7 @@ public class OptInUpdateEvent {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(final User user) {
         this.user = user;
     }
 
@@ -34,7 +34,7 @@ public class OptInUpdateEvent {
         return newOptInStatus;
     }
 
-    public void setNewOptInStatus(boolean newOptInStatus) {
+    public void setNewOptInStatus(final boolean newOptInStatus) {
         this.newOptInStatus = newOptInStatus;
     }
 }

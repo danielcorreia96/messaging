@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 @GroupOperator("NG")
 public class NamedGroup extends CustomGroup {
+    private static final long serialVersionUID = -3041100031530773205L;
 
     @GroupArgument("name")
     private LocalizedString name;
@@ -23,11 +24,11 @@ public class NamedGroup extends CustomGroup {
     public NamedGroup() {
     }
 
-    public NamedGroup(LocalizedString name) {
+    public NamedGroup(final LocalizedString name) {
         this.name = name;
     }
 
-    public NamedGroup(LocalizedString name, Group group) {
+    public NamedGroup(final LocalizedString name, final Group group) {
         this.name = name;
         this.group = group;
     }
@@ -44,21 +45,21 @@ public class NamedGroup extends CustomGroup {
         return group.getMembers();
     }
 
-    @Override public Stream<User> getMembers(DateTime dateTime) {
+    @Override public Stream<User> getMembers(final DateTime dateTime) {
         return group.getMembers(dateTime);
     }
 
-    @Override public boolean isMember(User user) {
+    @Override public boolean isMember(final User user) {
         return group.isMember(user);
     }
 
-    @Override public boolean isMember(User user, DateTime dateTime) {
+    @Override public boolean isMember(final User user, final DateTime dateTime) {
         return group.isMember(user, dateTime);
     }
 
-    @Override public boolean equals(Object o) {
-        if (o instanceof NamedGroup) {
-            NamedGroup other = (NamedGroup) o;
+    @Override public boolean equals(final Object obj) {
+        if (obj instanceof NamedGroup) {
+            final NamedGroup other = (NamedGroup) obj;
             return Objects.equal(name, other.name) && Objects.equal(group, other.group);
         }
         return false;

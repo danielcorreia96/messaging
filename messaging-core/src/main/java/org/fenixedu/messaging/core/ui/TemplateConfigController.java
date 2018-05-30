@@ -23,24 +23,24 @@ import com.google.common.collect.ImmutableMap;
 public class TemplateConfigController {
 
     @RequestMapping(value = { "", "/" })
-    public String listTemplates(Model model, @RequestParam(value = "page", defaultValue = "1") int page, @RequestParam(
-            value = "items", defaultValue = "10") int items) {
+    public String listTemplates(final Model model, @RequestParam(value = "page", defaultValue = "1") final int page,
+            @RequestParam(value = "items", defaultValue = "10") final int items) {
         PaginationUtils.paginate(model, "messaging/config/templates", "templates", MessageTemplate.all(), items, page);
         return "messaging/listTemplates";
     }
 
     @RequestMapping("/{template}")
-    public ModelAndView viewTemplate(@PathVariable MessageTemplate template) throws Exception {
-        Set<Locale> locales = new HashSet<Locale>(CoreConfiguration.supportedLocales());
-        Stream.of(template.getSubject(), template.getTextBody(), template.getHtmlBody()).flatMap(ls -> ls.getLocales().stream())
+    public ModelAndView viewTemplate(@PathVariable final MessageTemplate template) {
+        final Set<Locale> locales = new HashSet<>(CoreConfiguration.supportedLocales());
+        Stream.of(template.getSubject(), template.getTextBody(), template.getHtmlBody()).flatMap(content -> content.getLocales().stream())
                 .forEach(locales::add);
         return new ModelAndView("messaging/viewTemplate",
                 ImmutableMap.of("template", template, "locales", getSupportedLocales(template)));
     }
 
     @RequestMapping("/{template}/edit")
-    public String editTemplate(Model model, @PathVariable MessageTemplate template,
-            @ModelAttribute("templateBean") MessageContentBean bean) throws Exception {
+    public String editTemplate(final Model model, @PathVariable final MessageTemplate template,
+            @ModelAttribute("templateBean") final MessageContentBean bean) {
         bean.copy(template);
         model.addAttribute("template", template);
         model.addAttribute("templateBean", bean);
@@ -48,15 +48,15 @@ public class TemplateConfigController {
     }
 
     @RequestMapping("/{template}/reset")
-    public String resetTemplate(Model model, @PathVariable MessageTemplate template) throws Exception {
+    public String resetTemplate(final Model model, @PathVariable final MessageTemplate template) {
         model.addAttribute("template", template);
         model.addAttribute("templateBean", new MessageContentBean(template.getDeclaration()));
         return "messaging/editTemplate";
     }
 
     @RequestMapping(value = "/{template}/edit", method = RequestMethod.POST)
-    public ModelAndView saveTemplate(Model model, @PathVariable MessageTemplate template,
-            @ModelAttribute("templateBean") MessageContentBean bean) throws Exception {
+    public ModelAndView saveTemplate(final Model model, @PathVariable final MessageTemplate template,
+            @ModelAttribute("templateBean") final MessageContentBean bean) {
         if (bean.edit(template)) {
             return viewTemplate(template);
         }
@@ -65,8 +65,8 @@ public class TemplateConfigController {
         return new ModelAndView("messaging/editTemplate", model.asMap());
     }
 
-    private Set<Locale> getSupportedLocales(MessageTemplate template) {
-        Set<Locale> locales = template.getContentLocales();
+    private Set<Locale> getSupportedLocales(final MessageTemplate template) {
+        final Set<Locale> locales = template.getContentLocales();
         locales.addAll(CoreConfiguration.supportedLocales());
         return locales;
     }
