@@ -80,8 +80,9 @@ public class MessagingController {
     public String listSenders(final Model model, @RequestParam(value = "page", defaultValue = "1") final int page,
             @RequestParam(value = "items", defaultValue = "10") final int items,
             @RequestParam(value = "search", defaultValue = "") final String search) {
+        final Locale preferredLocale = Authenticate.getUser().getProfile().getPreferredLocale();
         Set<Sender> senders = Sender.available().stream()
-                .filter(sender -> sender.getName().toLowerCase().contains(search.toLowerCase()))
+                .filter(sender -> sender.getNameForLocale(preferredLocale).toLowerCase().contains(search.toLowerCase()))
                 .collect(Collectors.toSet());
         PaginationUtils.paginate(model, "messaging/senders", "senders", senders, items, page);
         model.addAttribute("search", search);

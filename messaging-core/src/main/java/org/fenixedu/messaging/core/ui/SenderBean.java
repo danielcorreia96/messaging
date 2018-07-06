@@ -1,5 +1,6 @@
 package org.fenixedu.messaging.core.ui;
 
+import org.fenixedu.commons.i18n.LocalizedString;
 import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.Atomic.TxMode;
 
@@ -23,7 +24,8 @@ public class SenderBean {
     protected static final String BUNDLE = "MessagingResources";
 
     private Boolean htmlEnabled, allPolicy, nonePolicy, attachmentsEnabled, optInRequired;
-    private String name, address, members, replyTo, policy, periodPolicy = "";
+    private LocalizedString name;
+    private String address, members, replyTo, policy, periodPolicy = "";
     private int amountPolicy = -1;
     private Collection<String> recipients, errors;
 
@@ -45,7 +47,7 @@ public class SenderBean {
         if (getOptInRequired() == null) {
             errors.add(BundleUtil.getString(BUNDLE, "error.sender.validation.optInRequired.required"));
         }
-        if (Strings.isNullOrEmpty(getName())) {
+        if (getName().isEmpty()) {
             errors.add(BundleUtil.getString(BUNDLE, "error.sender.validation.name.empty"));
         }
         if (Strings.isNullOrEmpty(getPolicy())) {
@@ -104,7 +106,7 @@ public class SenderBean {
         return htmlEnabled;
     }
 
-    public String getName() {
+    public LocalizedString getName() {
         return name;
     }
 
@@ -156,7 +158,7 @@ public class SenderBean {
         this.htmlEnabled = htmlEnabled;
     }
 
-    public void setName(String name) {
+    public void setName(LocalizedString name) {
         this.name = name;
     }
 

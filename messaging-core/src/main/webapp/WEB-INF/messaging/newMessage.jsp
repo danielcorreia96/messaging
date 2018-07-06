@@ -51,14 +51,14 @@ ${portal.toolkit()}
 		<c:if test="${not messageBean.senderLocked or empty messageBean.sender}">
 			<form:select class="form-control" id="selectSender" path="sender" required="true">
 				<c:forEach var="sender" items="${sort:uniqueSort(senders)}">
-					<form:option value="${sender.externalId}">${sender.name} (${sender.address})</form:option>
+					<form:option value="${sender.externalId}">${sender.name.content} (${sender.address})</form:option>
 				</c:forEach>
 			</form:select>
 		</c:if>
 		<c:if test="${not empty messageBean.sender and messageBean.senderLocked}">
 			<form:input type="hidden" path="sender" value="${messageBean.sender.externalId}"/>
 			<form:input path="" type="text" class="form-control" id="senderSelect" readonly="true"
-						value="${messageBean.sender.name} (${messageBean.sender.address})"/>
+						value="${messageBean.sender.name.content} (${messageBean.sender.address})"/>
 		</c:if>
 		</div>
 	</div>

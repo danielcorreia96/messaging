@@ -24,6 +24,7 @@
  */
 package org.fenixedu.messaging.core.domain;
 
+import org.fenixedu.commons.i18n.LocalizedString;
 import pt.ist.fenixframework.Atomic;
 import pt.ist.fenixframework.Atomic.TxMode;
 
@@ -42,7 +43,6 @@ import org.fenixedu.bennu.core.groups.Group;
 import org.fenixedu.bennu.core.security.Authenticate;
 import org.joda.time.Period;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import static java.util.Objects.requireNonNull;
@@ -63,7 +63,9 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     }
 
     public static final class SenderBuilder {
-        private String address, name = null, replyTo = null;
+        private LocalizedString name;
+        private String address;
+        private String replyTo = null;
         private boolean htmlEnabled;
         private Group members = Group.nobody();
         private MessageStoragePolicy policy = MessageStoragePolicy.keepAll();
@@ -82,7 +84,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
             return this;
         }
 
-        public SenderBuilder as(String name) {
+        public SenderBuilder as(LocalizedString name) {
             this.name = requireNonNull(name);
             return this;
         }
@@ -161,7 +163,7 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         public Sender build() {
             Sender sender = new Sender();
             sender.setAddress(address);
-            sender.setName(Strings.nullToEmpty(name));
+            sender.setName(name);
             sender.setReplyTo(replyTo);
             sender.setHtmlEnabled(htmlEnabled);
             sender.setMembers(members);
@@ -192,9 +194,11 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
     }
 
     @Override
-    public void setName(String name) {
+    public void setName(LocalizedString name) {
         super.setName(requireNonNull(name));
     }
+
+    public String getNameForLocale(Locale locale) { return super.getName().getOrDefault(locale, super.getName().getContent()); }
 
     @Override
     public void setReplyTo(String replyTo) {
@@ -258,10 +262,6 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
         }
     }
 
-    public String getName(final User user) {
-        return getName();
-    }
-
     public void pruneMessages() {
         getPolicy().pruneMessages(this);
     }
@@ -296,7 +296,8 @@ public class Sender extends Sender_Base implements Comparable<Sender> {
 
     @Override
     public int compareTo(Sender sender) {
-        int c = ptCollator.compare(getName(), sender.getName());
+        final Locale locale = Authenticate.getUser().getProfile().getPreferredLocale();
+        int c = Collator.getInstance(locale).compare(getNameForLocale(locale),sender.getNameForLocale(locale));
         return c == 0 ? getExternalId().compareTo(sender.getExternalId()) : c;
     }
 }

@@ -28,10 +28,7 @@ import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.def
 import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.defaultSystemSenderMembers;
 import static org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.defaultSystemSenderName;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +41,7 @@ import org.fenixedu.bennu.core.domain.User;
 import org.fenixedu.bennu.core.domain.UserProfile;
 import org.fenixedu.bennu.core.domain.groups.PersistentGroup;
 import org.fenixedu.bennu.core.groups.Group;
+import org.fenixedu.commons.i18n.LocalizedString;
 import org.fenixedu.messaging.core.dispatch.MessageDispatcher;
 
 import com.google.common.base.Joiner;
@@ -70,7 +68,8 @@ public class MessagingSystem extends MessagingSystem_Base {
         instance = Bennu.getInstance().getMessagingSystem();
         if (instance == null) {
             instance = new MessagingSystem();
-            Sender sender = Sender.from(defaultSystemSenderAddress).as(defaultSystemSenderName)
+            Sender sender = Sender.from(defaultSystemSenderAddress)
+                    .as(new LocalizedString.Builder().with(Locale.getDefault(), defaultSystemSenderName).build())
                     .members(Group.parse(defaultSystemSenderMembers)).recipients(Group.anyone()).build();
             instance.setSystemSender(sender);
         }

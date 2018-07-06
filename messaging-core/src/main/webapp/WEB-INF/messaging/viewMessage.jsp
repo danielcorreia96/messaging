@@ -76,7 +76,7 @@ ${portal.toolkit()}
 				<spring:message code="label.message.sender.name"/>
 			</th>
 			<td>
-				${message.sender.name}
+				${message.sender.name.content}
 			</td>
 		</tr>
 		<tr>

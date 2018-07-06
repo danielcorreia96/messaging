@@ -1,14 +1,15 @@
 package org.fenixedu.messaging.core.ui;
 
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.fenixedu.bennu.core.security.Authenticate;
 import org.fenixedu.bennu.spring.portal.SpringFunctionality;
 import org.fenixedu.messaging.core.domain.MessagingSystem;
 import org.fenixedu.messaging.core.domain.Sender;
 import org.fenixedu.messaging.core.exception.MessagingDomainException;
-import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,8 +40,9 @@ public class SenderConfigController {
         Sender systemSender = MessagingSystem.systemSender();
         model.addAttribute("sender", systemSender);
         model.addAttribute("system", true);
+        Locale preferredLocale = Authenticate.getUser().getProfile().getPreferredLocale();
         Set<Sender> senderSet = Sender.all().stream()
-                .filter(s -> s.getName().toLowerCase().contains(search.toLowerCase()))
+                .filter(s -> s.getNameForLocale(preferredLocale).toLowerCase().contains(search.toLowerCase()))
                 .collect(Collectors.toSet());
         senderSet.remove(systemSender);
         PaginationUtils.paginate(model, "messaging/config/senders", "senders", senderSet, items, page);

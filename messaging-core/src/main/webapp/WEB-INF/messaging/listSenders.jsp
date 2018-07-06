@@ -26,11 +26,12 @@
     <h4><spring:message code="title.senders.empty"/></h4>
 </c:if>
 
-<c:if test="${not empty senders}">
+
 <div class="input-group input-group-sm" style="margin-top: 20px; margin-bottom: 5px;">
 	<spring:message code="hint.sender.search" var="placeholder"/>
 	<input id="filter-select" class="form-control" style="text-align: left; width: 400px; padding: 0 5px;" type="text" value="${search}" placeholder="${placeholder}"/>
 </div>
+<c:if test="${not empty senders}">
 <table class="table table-hover table-condensed">
 	<thead>
 		<tr>
@@ -43,7 +44,7 @@
 	<c:forEach items="${sort:uniqueSort(senders)}" var="sender">
 		<tr>
 			<td class="col-sm-5">
-				<c:out value="${sender.name}"/>
+				<c:out value="${sender.name.content}"/>
 			</td>
 			<td class="col-sm-4">
 				<code><c:out value="${sender.address}"/></code>

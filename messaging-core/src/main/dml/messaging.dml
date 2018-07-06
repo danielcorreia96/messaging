@@ -12,7 +12,7 @@ class MessagingSystem {
 
 class Sender {
 	public boolean htmlEnabled;
-	public String name;
+	public LocalizedString name;
 	public String address;
 	public String replyTo;
 	public MessageStoragePolicy policy;

@@ -24,7 +24,7 @@
 				<spring:message code="label.sender.name"/>
 			</th>
 			<td>
-				<c:out value="${sender.name}"/>
+				<c:out value="${sender.name.content}"/>
 			</td>
 		</tr>
 		<tr>

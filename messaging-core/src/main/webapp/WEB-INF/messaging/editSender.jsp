@@ -5,6 +5,8 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@ taglib uri="org.fenixedu.messaging.tags.sorter" prefix="sort" %>
 
+${portal.toolkit()}
+
 <h2><spring:message code="title.sender.edit${ create? '.new' : '' }"/></h2>
 
 <c:if test="${not empty senderBean.errors}">
@@ -21,7 +23,7 @@
 	<div class="form-group">
 		<label class="control-label col-sm-2" for="name"><spring:message code="label.sender.name"/>:</label>
 		<div class="col-sm-10">
-			<form:input type="text" class="form-control" id="name" path="name" value="${senderBean.name}" required="required"/>
+			<input class="form-control" id="name" name="name" value='<c:out value="${senderBean.name.json()}"/>' bennu-localized-string required-any/>
 		</div>
 	</div>
 	<div class="form-group">

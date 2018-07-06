@@ -76,7 +76,7 @@ public final class MimeMessageHandler extends MimeMessageHandler_Base {
 
     private InternetAddress getFrom() throws MessagingException {
         final Sender sender = getReport().getMessage().getSender();
-        final String name = sender.getName();
+        final String name = getContent(sender.getName(), getLocale());
         final String address = sender.getAddress();
         try {
             return new InternetAddress(address, name, "utf-8");

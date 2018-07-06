@@ -1,6 +1,7 @@
 package org.fenixedu.messaging.core.bootstrap;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.fenixedu.bennu.core.bootstrap.AdminUserBootstrapper;
 import org.fenixedu.bennu.core.bootstrap.BootstrapError;
@@ -11,6 +12,7 @@ import org.fenixedu.bennu.core.bootstrap.annotations.FieldType;
 import org.fenixedu.bennu.core.bootstrap.annotations.Section;
 import org.fenixedu.bennu.core.domain.exceptions.BennuCoreDomainException;
 import org.fenixedu.bennu.core.groups.Group;
+import org.fenixedu.commons.i18n.LocalizedString;
 import org.fenixedu.messaging.core.bootstrap.MessagingSystemBootstrap.SystemSenderSection;
 import org.fenixedu.messaging.core.domain.MessagingSystem;
 import org.fenixedu.messaging.core.domain.Sender;
@@ -23,15 +25,17 @@ import com.google.common.collect.Lists;
 public class MessagingSystemBootstrap {
 
     private static final String BUNDLE = "MessagingResources";
-    public static final String defaultSystemSenderAddress = "system@messaging.fenixedu.org",
-            defaultSystemSenderName = "System Sender",
-            defaultSystemSenderMembers = "#managers";
+    public static final String defaultSystemSenderAddress = "system@messaging.fenixedu.org";
+    public static final String defaultSystemSenderName = "System Sender";
+    public static final String defaultSystemSenderMembers = "#managers";
 
     @Bootstrap
     public static List<BootstrapError> bootstrapSystemSender(SystemSenderSection section) {
-        String name = section.getName(), address = section.getAddress(), expression = section.getGroupExpression();
+        LocalizedString name = new LocalizedString.Builder().with(Locale.getDefault(), section.getName()).build();
+        String address = section.getAddress();
+        String expression = section.getGroupExpression();
         List<BootstrapError> errors = Lists.newArrayList();
-        if (Strings.isNullOrEmpty(name)) {
+        if (name.isEmpty()) {
             errors.add(new BootstrapError(SystemSenderSection.class, "getName", "error.bootstrapper.systemsender.name.empty",
                     BUNDLE));
         }
