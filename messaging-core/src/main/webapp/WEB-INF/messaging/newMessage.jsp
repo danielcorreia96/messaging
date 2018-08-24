@@ -175,7 +175,6 @@ ${portal.toolkit()}
     }
 
     recipientsSelectEl.select2({
-        allowClear: true,
         placeholder: '<spring:message code="label.message.selectedRecipients.placeholder" text="Select Recipient(s)..."/>'
 	});
 
@@ -206,22 +205,66 @@ ${portal.toolkit()}
 
             recipientsSelectEl.empty();
             recipientsSelectEl.select2({
+				allowClear: true,
                 placeholder: '<spring:message code="label.message.selectedRecipients.placeholder" text="Select Recipient(s)..."/>',
 				data: result
             });
-            // Custom select2 fix to have insertion order in selected options
-            recipientsSelectEl.on("select2:select", function (evt) {
-                var element = evt.params.data.element;
-                var $element = $(element);
 
-                $element.detach();
-                $(this).append($element);
-                $(this).trigger("change");
+            /* defaults: Cache order of the initial values */
+            let defaults = recipientsSelectEl.select2('data');
+            defaults.forEach(obj => {
+                let order = recipientsSelectEl.data('preserved-order') || [];
+				order[ order.length ] = obj.id;
+            	recipientsSelectEl.data('preserved-order', order)
+			});
+
+            function select2_renderSelections($select2){
+                const order      = recipientsSelectEl.data('preserved-order') || [];
+                const $tags      = recipientsSelectEl.next('.select2-container').find('li.select2-selection__choice');
+                const $input     = $tags.last().next();
+
+                // apply tag order
+                order.forEach(val => {
+                    let $el = $tags.get().find(tag => {
+                        return $(tag).data('data').id === val
+                    });
+                $input.before( $el );
             });
+            }
+
+            function selectionHandler(e){
+                const val       = e.params.data.id;
+                const order     = recipientsSelectEl.data('preserved-order') || [];
+
+                switch (e.type){
+                    case 'select2:select':
+                        order[ order.length ] = val;
+                        break;
+                    case 'select2:unselect':
+                        let found_index = order.indexOf(val);
+                        if (found_index >= 0 )
+                            order.splice(found_index,1);
+                        break;
+                }
+
+                recipientsSelectEl.data('preserved-order', order); // store it for later
+
+                // A promise might be better, but this is to avoid the race issue
+                window.setTimeout(function(){
+                    select2_renderSelections(recipientsSelectEl);
+                },0);
+            }
+
+            recipientsSelectEl.on('select2:select select2:unselect', selectionHandler);
 
             // Custom select2 configuration to detect on change event
             recipientsSelectEl.on('change', function(e){
                 checkRequiredFields();
+            });
+
+            // Custom select2 workaround so that when selection is cleared, the options list is reset
+            recipientsSelectEl.on("select2:clear", function(e) {
+                senderUpdate(sender);
             });
 
             $('#replyTo').val(info.replyTo);
@@ -253,7 +296,6 @@ ${portal.toolkit()}
             htmlBodyEL.removeAttr('name');
         }
     }
-
     function toggleNonOptInRequiredDisclaimer(info) {
         var nonOptInRequiredDisclaimerEl = $('#nonOptInRequiredDiv');
         if (!info.optInRequired) {
